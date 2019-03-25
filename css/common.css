@@ -51,7 +51,8 @@ body {
 	text-align: center;
 	color: #17252A;
 	padding: 14px 16px;
-	text-decoration: none;
+  text-decoration: none;
+  transition: all ease-in-out 100ms;
 }
 
 #topBar li a:hover:not(.make) {

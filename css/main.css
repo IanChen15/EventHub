@@ -10,6 +10,7 @@
 	background-color: #feffff;
 	z-index: 1000;
 	position: fixed;
+	transition: all ease-in-out 200ms;
 }
 #searchContent {
 	border: none;
@@ -50,6 +51,7 @@
 	display: inline-block;
 	border-radius: 3px;
 	position: relative;
+	transition: all ease-in-out 100ms;
 }
 .event:hover{
     box-shadow: 1px 1px 15px gray;	

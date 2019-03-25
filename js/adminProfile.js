@@ -122,16 +122,6 @@ const eventListWrapper = document.querySelector("#eventListWrapper");
 
 // for use in make new event
 const make = document.querySelector(".make");
-const makePopUp = document.querySelector("#makePopUp");
-const eventSubmit = document.querySelector("#eventSubmit");
-const eventCancel = document.querySelector("#eventCancel");
-const selectCat = document.getElementById("categoryInput");
-const title = document.getElementById("titleInput");
-const date = document.getElementById("dateInput");
-const loc = document.getElementById("locationInput");
-const imgContainer =  document.querySelector("#imageList");
-const description = document.getElementById("descriptionInput");
-const commentOrNot = document.getElementById("allowComment");
 
 // EVENT LISTENERS!!!
 settingIcon.addEventListener("click", settingClicked);
@@ -142,11 +132,6 @@ document.querySelector("#modifyEvents").addEventListener("click", loadEvents);
 
 // for use in make new event
 make.addEventListener('click', makeNewEvent);
-eventSubmit.addEventListener('click', createNewEvent);
-eventCancel.addEventListener('click', cancelCreateNewEvent);
-
-document.querySelector(".imgInput").addEventListener("change", updateEventPhoto);
-
 
 /*----------------------------------------------------------------------*/
 /*------------------------- DOM functions ------------------------------*/
@@ -349,35 +334,6 @@ function exitPopup() {
     }
 }
 
-/*-- Edit event section --*/
-
-function openEditPopUp(event) {
-    selectCat.selectedIndex = allCategories.indexOf(event.type)
-    title.value = event.title;
-    loc.value = event.location;
-    const date1 = event.date;
-    const dateString = `${date1.getFullYear()}` + "-" 
-                     + (date1.getMonth() + 1 < 10 ? "0" + (date1.getMonth() + 1) : (date1.getMonth() + 1)) + "-"
-                     + (date1.getDate() < 10 ? "0" + date1.getDate() : date1.getDate()) + 'T'
-                     + (date1.getHours() < 10 ? "0" + date1.getHours() : date1.getHours()) + ":"
-                     + (date1.getMinutes() < 10 ? "0" + date1.getMinutes() : date1.getMinutes());
-    date.value = dateString;
-    console.log(dateString);
-    description.value = event.description;
-
-    const imgList = document.querySelector('#imageList');
-    imgList.removeChild(imgList.firstElementChild);
-    for (let i = 0 ; i < event.img.length ; i++) {
-        const img = newImgInput();
-        img.firstChild.style.backgroundImage = "url(" + event.img[i] + ")";
-        imgList.appendChild(img);
-    }
-    imgList.appendChild(newImgInput());
-
-    makePopUp.style.display = "";
-    eventSubmit.value = "Save";
-}
-
 /*----------------------------------------------------------------------*/
 /*-- This part here is used for event listeners-------------------------*/
 /*----------------------------------------------------------------------*/
@@ -392,6 +348,33 @@ function eventClicked(e) {
         openEditPopUp(currentSelectedEvent);
     }
 }
+
+// Open the make new event pop up
+function makeNewEvent(e) {
+	if(e.target.className == "make") {
+		e.preventDefault();
+		const popUp = new ModPopUp(null, currentUser, domCallback, serverCallback);
+		document.body.appendChild(popUp.getPopUp());
+	}
+}
+
+/*-- Edit event section --*/
+
+function openEditPopUp(event) {
+    const popup = new ModPopUp(event, currentUser, domCallback, serverCallback);
+    document.body.appendChild(popup.getPopUp());
+}
+
+function domCallback(newEvent) {
+
+}
+
+function serverCallback(newEvent) {
+    serverCall(newEvent);
+}
+
+/*-- Setting change section --*/
+
 function settingClicked(e) {
     e.preventDefault();
     loadUserSetting(currentUser); 
@@ -459,8 +442,6 @@ function popupClicked(e) {
 }
 
 
-
-
 // DOM SAVING
 function updatePhoto(e) {
     let filepath = e.target.files[0];
@@ -470,63 +451,12 @@ function updatePhoto(e) {
     }
 }
 
-/* ---- for event edit pop up */
-
-// Open the make new event pop up
-function makeNewEvent(e) {
-	if(e.target.className == "make") {
-		e.preventDefault();
-		makePopUp.style.display = "";
-	}
-}
-
-// Create new event after error checking.
-// or do edit
-function createNewEvent(e) {
-	if(e.target.id == "eventSubmit") {
-		e.preventDefault();
-		const categ = selectCat.options[selectCat.selectedIndex].value;
-		const imgList = [];
-		const len = imgContainer.querySelectorAll(".imgInputButton").length;
-		for (let i = 0; i < len - 1; i++) {
-            // hardcode to add img to the event post
-            // server code later
-			imgList.push(imgContainer.querySelectorAll(".imgInputButton")[i].style.backgroundImage.slice(4, -1).replace(/"/g, "")); // == "url("src.png")
-		}
-		if(date.value != "" && title.value != "" && loc.value != "") {
-			const newEvent = new Event(title.value, loc.value, convertTime(date.value), description.value, imgList, categ, null);
-            //edit event by backend
-    
-			removeMakeNewEVentContent();
-		}
-		else { 
-			changeColorError(title);
-			changeColorError(loc);
-			changeColorError(date);
-			changeColorError(description);
-		}
-    }
-
-}
-
 // Close the make new event pop up and reset all input fields.
 function cancelCreateNewEvent(e) {
 	if(e.target.id == "eventCancel") {
 		e.preventDefault();
 		makePopUp.style.display = "none";
 		removeMakeNewEVentContent();
-	}
-}
-
-function updateEventPhoto(e) {
-	let filepath = e.target.files[0];
-	if (filepath != null){
-		filepath = filepath.name;
-		let oldImg = e.target.parentElement.style.backgroundImage;
-		console.log(oldImg);
-		e.target.parentElement.style.backgroundImage = "url(" + filepath + ")";
-		if (oldImg == "")
-			document.querySelector("#imageList").appendChild(newImgInput());
 	}
 }
 
@@ -546,55 +476,6 @@ function createNewElement(type, clss, id, txt) {
         container.id = id;
     }
     return container;
-}
-
-// Create the new Img Input for uploading photos.
-function newImgInput() {
-	const imgButton = createNewElement("div", "imgInputButton");
-	const imgInput = createNewElement("input", "imgInput");
-	imgInput.type = "file";
-	imgInput.accept = "image/*";
-	imgInput.addEventListener("change", updateEventPhoto);
-	imgButton.appendChild(imgInput);
-	const li = createNewElement("li");
-	li.appendChild(imgButton);
-	return li;
-}
-
-// Help remove all the input field value from the MakeEventForm
-function removeMakeNewEVentContent() {
-	makePopUp.style.display = "none";
-	title.value = "";
-	date.value = "";
-	loc.value = "";
-	description.value = "";
-	title.style.borderColor = "none";
-	date.style.borderColor = "none";
-	loc.style.borderColor = "none";
-    description.style.borderColor = "none";
-    eventSubmit.value = "Post Your Event";
-
-	while (imgContainer.firstElementChild){
-		imgContainer.removeChild(imgContainer.firstElementChild)
-	}
-    imgContainer.appendChild(newImgInput());
-    currentSelectedEvent = null;    
-}
-
-// Change the border color of empty input to red to indicate error.
-function changeColorError(selector) {
-	if(selector.value == "") {
-		selector.style.borderColor = "red";
-	}
-	else {
-		selector.style.borderColor = "";
-	}
-}
-
-// Convert the dateime-local
-function convertTime(date) {
-	var string = date.split(/^(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2})$/);	
-	return new Date(string[1], string[2], string[3], string[4], string[5]);
 }
 
 function loadPage() {
