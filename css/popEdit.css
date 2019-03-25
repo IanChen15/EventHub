@@ -1,0 +1,177 @@
+#makePopUp {
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    position: absolute;
+	top: 0px;
+	left: 0px;	 
+	overflow: hidden;
+	z-index: 10000;
+    background-color: #17252A;
+}
+
+.postHolder {
+    width: 70%;   /* use js to set it*/
+    height: 100%;
+    display: inline-block;
+    position: relative;
+    box-shadow: 2px 1px 6px black;
+    font-family: Larsseit,'Helvetica Neue',Helvetica,Arial,Sans-serif;
+	background-color:#DEF2F1;
+	overflow: auto;
+}
+
+.headerLine {
+    border: 0;
+    border-bottom: 2px solid rgb(228, 226, 233);
+    background: rgb(228, 226, 233);
+}
+
+/* submit button */
+
+#eventSubmit {
+    float: right;
+    font-size: 20px;
+	margin-right: 50px;
+    color: white;
+    background-color: #2B7A78;
+    border: 2px green;
+    padding: 10px;
+}
+
+#eventSubmit:hover {
+    box-shadow: 1px 1px 8px black;
+}
+
+#eventCancel {
+	float: left;
+    font-size: 20px;
+	margin-left: 50px;
+    color: white;
+    background-color: #2B7A78;
+    border: 2px green;
+    padding: 10px;
+}
+
+#eventCancel:hover {
+    box-shadow: 1px 1px 8px black;
+}
+
+/* Label styles for each input */
+
+.inputFormList{
+    list-style: none;
+    text-align: left;
+    vertical-align: middle;
+	padding-bottom: 10px;
+	background-color: #feffff;
+}
+
+.inputFormList li{
+    margin-bottom: 10px;
+}
+
+.inputFormList label{
+    min-width: 170px;
+    text-align: right;
+    display: inline-block;
+}
+
+/* Input box style */
+
+.inputBox {
+    border: 1px solid rgb(180, 176, 176);
+    border-radius: 3px;
+    outline: none;
+    text-align: justify;
+    text-justify: inter-word;
+    vertical-align: top;
+}
+
+.inputBox:focus {
+    border: 1px solid #474646;
+}
+
+#descriptionInput {
+    width: 70%;
+    height: 200px;
+    resize: none;
+}
+
+/* For img list */
+#imageList{
+    padding: 0px;
+    display: inline-block;
+    height: 130px;
+    max-width: 50%;
+    white-space: nowrap;
+    overflow: auto;
+    vertical-align: top;
+}
+
+#imageList li{
+    margin: 0px;
+    display: inline-table;
+}
+
+.imgInputButton {
+    width: 100px;
+    height: 100px;
+    border: 1px solid rgb(180, 176, 176);
+    border-radius: 5px;
+    margin: 5px;
+	background-size: 100px 100px;
+}
+
+.imgInput {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Block styles */
+
+.block{
+    position: relative;
+    background-color: #feffff;
+    box-shadow: 2px 1px 6px rgba(51, 51, 51, 0.3);
+    margin-top: 10px;
+    margin-left: 50px;
+    margin-right: 50px;
+}
+
+.blockHeader {
+    display: block;
+    position: relative;
+    text-align: left;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 10px;
+    font-size: 20px;
+	font-weight: bold;
+}
+
+/* scroll bar style */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 3px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1; 
+}
+ 
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888; 
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555; 
+}
+
+

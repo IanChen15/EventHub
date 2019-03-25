@@ -1,0 +1,30 @@
+<html>
+	<head lang="en">
+		<meta charset="utf-8">
+		<title>Sign in</title>
+		<link rel="stylesheet" type="text/css" href="../css/mystyle.css">
+	</head>
+	
+	<body>
+		<div id="login">
+			<h1>Log In</h1>
+			<div class="logo">
+				<img class="logoImg" src= "../pictures/webPic/logo.png">
+			</div>
+			<form class="container">
+				<label for="uname"><b>Username</b></label>
+				<input type="text" id ="uname" placeholder="Enter Username" name="uname" required>
+
+				<label for="psw"><b>Password</b></label>
+				<input type="password" id ="psw" placeholder="Enter Password" name="psw" required>
+					
+				<button type="submit">Login</button>
+				<label>
+					<input type="checkbox" checked="checked" name="remember"> Remember me
+				</label>
+				<span class="psw">Forgot <a href="#">password?</a></span>
+			</form>
+		</div>
+		<script src="../js/login.js"></script>
+	</body>
+</html>

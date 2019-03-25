@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+ <head>
+ 	<meta charset="utf-8">
+    <title>profile</title>
+    <link rel="stylesheet" type="text/css" href="../css/adminProfileStyle.css">
+    <link rel="stylesheet" type="text/css" href="../css/popEdit.css">
+    <link rel="stylesheet" type="text/css" href="../css/common.css"> 
+</head>
+ <body>
+   <div id="topBar">
+      <ul>
+         <li><a id="modifyEvents"> Modify Events</a></li>
+         <li><a id="modifyUsers" >Modify Users</a></li>
+         <li style="float:right"><a class="Log out"  href="main.html">Log out</a></li>
+         <li style="float:right"><a class="Home"  href="main.html">Home</a></li>
+         <li style="float:right"><a class="make">Make an event</a></li>
+      </ul>
+   </div>
+   <!-- Search bar optional for phase 2 -->
+   <!-- <div class="search">
+        <img id="searchIcon" src="search.png">
+        <input id="searchContent" type='text' placeholder="Type to search"></input>
+    </div> -->
+   <div id="mainSection">
+        <div id="listSection">
+            <div id="eventListWrapper" class="list">
+                <!-- <div class="event">
+                    <span class="title">Bill's Party</span>
+                    <span class="location">BAHEN CENTER OF I.T.</span>
+                    <span class="date">3am, Feb 24th, 2019</span>
+                    <img class="edit" src="settings.png">
+                    <img class="delete" src="delete.png">
+                </div>
+                <div class="event">
+                    <span class="title">Bill's Party</span>
+                    <span class="location">BAHEN CENTER OF I.T.</span>
+                    <span class="date">3am, Feb 24th, 2019</span>
+                    <img class="edit" src="settings.png">
+                    <img class="delete" src="delete.png">
+                </div>
+                <div class="event">
+                    <span class="title">Bill's Party</span>
+                    <span class="location">BAHEN CENTER OF I.T.</span>
+                    <span class="date">3am, Feb 24th, 2019</span>
+                    <img class="edit" src="settings.png">
+                    <img class="delete" src="delete.png">
+                </div>
+                <div class="event">
+                    <span class="title">Bill's Party</span>
+                    <span class="location">BAHEN CENTER OF I.T.</span>
+                    <span class="date">3am, Feb 24th, 2019</span>
+                    <img class="edit" src="settings.png">
+                    <img class="delete" src="delete.png">
+                </div> -->
+            </div>
+            <div id="userListWrapper" class='list'>
+                <div class="user">
+                    <span class="name">Bill</span>
+                    <img class="edit" src="../pictures/webPic/settings.png">
+                    <img class="delete" src="../pictures/webPic/delete.png">
+                </div>
+                <div class="user">
+                    <span class="title">Bill</span>
+                    <img class="edit" src="../pictures/webPic/settings.png">
+                    <img class="delete" src="../pictures/webPic/delete.png">
+                </div>
+                <div class="user">
+                    <span class="title">Bill</span>
+                    <img class="edit" src="../pictures/webPic/settings.png">
+                    <img class="delete" src="../pictures/webPic/delete.png">
+                </div>
+                <div class="user">
+                    <span class="title">Bill</span>
+                    <img class="edit" src="../pictures/webPic/settings.png">
+                    <img class="delete" src="../pictures/webPic/delete.png">
+                </div>
+            </div>
+           
+        </div>
+
+        <div id="profileArea">
+            <img id="settingIcon" src="../pictures/webPic/settings.png">
+            <img class="profilePic" src="../pictures/profilePic/face.jpg">
+            <div id="profileInfo">
+                <h1>Michael ABCDEFGH</h1>
+                <h4>Description</h4>
+                <p class="description"> Michael Own us bubble tea!!! Bill owns ian bubble tea!!!!!!!!! Ian own himself bubble tea!!! </p>
+                <h4>Birthday</h4>
+                <p class="birthday"> bla bla</p>
+                <h4>Location: </h4>
+                <p class="location"> Bobby Tow fdsa fa faf dsaf asdfdsafasdfsadfasfsdafsdafn</p>
+                <h4>Interests</h4>
+                <p class="interests">
+                    #CS #math
+                </p>
+            </div>
+        </div>
+    </div>
+
+   <div id='footer'></div>
+
+   <!-- HIDDEN ELEMENTS -->
+   <div id="msgBox">
+        <form class="msgForm">
+            <textarea class="msgContent" placeholder="Enter your message here..."></textarea>
+            <input class="submitMsg" type="submit" value="Submit Message"></input>
+        </form>
+    </div>
+    <div id="delBox">
+        <form class="delForm">
+            <h2></h2>
+            <button class="YES">YES</button>
+            <button class="NO">NO</button>
+        </form>
+    </div>
+    <div id='makePopUp' >
+	   <div class='postHolder'>
+		  <form id='postInfoForm'>
+			<div id='basicInfo' class='block'>
+				<div class='blockHeader'>Basic Info<hr class='headerLine'></div>
+				<ul class='inputFormList'>
+				   <li>
+					  <label for='categoryInput'>Category:</label>
+					  <select id='categoryInput' class='inputBox'>
+						 <option value="CS">CS</option>
+						 <option value="Math">Math</option>
+						 <option value="Group">Group Study</option>
+						 <option value="Party">Party</option>
+						 <option value="Other">Other</option>
+					  </select>
+				   </li>
+				   <li>
+					  <label for='titleInput'>Title:</label>
+					  <input id='titleInput' class='inputBox' type="text"  maxlength="40">
+				   </li>
+				   <li>
+					  <label for='dateInput'>Date:</label>
+					  <input id='dateInput' class='inputBox' type="datetime-local">
+				   </li>
+				   <li>
+					  <label for='locationInput'>Location:</label>
+					  <input id='locationInput' class='inputBox' type="text">
+				   </li>
+				</ul>
+			 </div>
+			 <div id='desImgInfo' class='block'>
+				   <div class='blockHeader'>Main Info<hr class='headerLine'></div>
+				   <ul class='inputFormList'>
+					  <li>
+						 <label>Upload Pictures: </label>
+						 <ul id='imageList'>
+							<li>
+							   <div class="imgInputButton">
+								<input class='imgInput' type="file" accept="image/*">
+							   </div>
+							</li>
+						 </ul>
+					  </li>
+					  <li>
+						 <label for='descriptionInput'>Description: </label>
+						 <textarea id='descriptionInput' class='inputBox'></textarea>
+					  </li>
+					  <li>
+						 <label>Allow Comment:</label>
+						 <input id='allowComment' type='checkbox'>Comment
+					  </li>
+				   </ul>
+			 </div>
+			 <input id='eventCancel' type="button" value="Cancel">
+            <input id='eventSubmit' type="button" value="Post your Event">
+		  </form>
+	   </div>
+   </div>
+   <script type="text/javascript" src="../js/class.js"></script>
+   <script type="text/javascript" src="../js/adminProfile.js"></script>
+ </body>
+
+</html>
