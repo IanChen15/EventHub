@@ -8,7 +8,7 @@
 /*
 * This function makes the pop up
 */
-function EventPopUp(event, user) {
+function EventPopUp(event, user, adminMode) {
     // used for hardcode part
     const maxReply = 1;
     const maxComment = 1;
@@ -75,12 +75,16 @@ function EventPopUp(event, user) {
     // add comment to the server
     function addCommentToServer() {}
 
+    // delete comment to the server
+    function deleteComment() {};
+
     /*----------------------------------------------------------------------*/
     /*-- DOM manipulation to make the pop-up --*/
     /*----------------------------------------------------------------------*/
 
     /*- Some selectors needed -*/
     const replyTags = this.popUp.querySelectorAll('.reply');
+    const deleteTags = this.popUp.querySelectorAll('.deleteComment');
     const moreBars = this.popUp.querySelectorAll('.moreBar');
     const leftArrow = this.popUp.querySelector('#leftArrow');
     const rightArrow = this.popUp.querySelector('#rightArrow');
@@ -273,6 +277,11 @@ function EventPopUp(event, user) {
         })
         const name = createNewElement('span', 'userName', null, comment.username);
         const userTag = createNewElement('div', 'userTag', null, null);
+        if (adminMode) {
+            const del = createNewElement('span', 'deleteComment', null, 'Delete');
+            userTag.appendChild(del);
+            del.addEventListener('click', userDeleteClick);
+        }
         if (isSubcomment == false) {
             const reply = createNewElement('span', 'reply', null, "Reply"); // not
             userTag.appendChild(reply);
@@ -408,6 +417,19 @@ function EventPopUp(event, user) {
         e.target.parentElement.parentElement.insertBefore(replyForm, e.target.parentElement.parentElement.children[5]);
     }
 
+    // for delete function
+    function userDeleteClick(e) {
+        e.preventDefault();
+
+        const commentBlock =  e.target.parentElement.parentElement;        
+        // send server request to delete
+        deleteComment();
+
+        // delete it from current page
+        commentBlock.querySelector('p').innerText = "This comment has been deleted..."
+        e.target.parentElement.removeChild(e.target);
+    }
+
     // for img slider
     function slideImg(e) {
         e.preventDefault();
@@ -506,6 +528,10 @@ function EventPopUp(event, user) {
                 if (moreBar != null) {
                     moreBar.addEventListener('click', moreBarClick);
                 }
+                const newDelete = newBlock.querySelector('.deleteComment');
+                if (newDelete) {
+                    newDelete.addEventListener('click', userDeleteClick);
+                }
                 commentArea.appendChild(newBlock);
                 commentArea.appendChild(createNewElement('hr', 'cmLine', null, null));
                 event.commentLoaded += 1;
@@ -524,6 +550,10 @@ function EventPopUp(event, user) {
             for (let i = comment.replyLoaded ; i < comment.reply.length && i < counter ; i++) {
                 const newBlock = createCommentBlock(comment.reply[i], true);
                 newBlock.classList.add('subCommentBlock');
+                const newDelete = newBlock.querySelector('.deleteComment');
+                if (newDelete) {
+                    newDelete.addEventListener('click', userDeleteClick);
+                }
                 commentBlock.appendChild(newBlock);
                 comment.replyLoaded += 1;
             }
