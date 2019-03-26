@@ -117,11 +117,11 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
         desLi.appendChild(descriptionInput);
         // for allow comment
         const allowLi = createNewElement('li', null, null, null);
-        const allowLabel = createNewElement('label', null, null, 'Allow Comment:');
-        allowLabel.htmlFor = 'allowComment';
-        const allowInput = createNewElement('input', null, 'allowComment', 'Comment');
+        const allowLabel = createNewElement('label', null, null, 'Allow Comments:');
+        allowLabel.htmlFor = 'allowComments';
+        const allowInput = createNewElement('input', null, 'allowComments', 'Comment');
         allowInput.type = 'checkbox';
-        allowInput.name = 'allowComment'
+        allowInput.name = 'allowComments'
         allowLi.appendChild(allowLabel);
         allowLi.appendChild(allowInput);
         // combine main ul

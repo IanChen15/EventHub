@@ -60,6 +60,10 @@ const EventSchema = new mongoose.Schema({
 	numFollows: {
 		type: Number,
 		required: true
+	},
+	allowComments: {
+		type: Boolean,
+		required: true
 	}
 })
 

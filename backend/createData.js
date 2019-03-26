@@ -63,7 +63,8 @@ const event1 = new Event({
 	eventType: [new mongoose.Types.ObjectId(interest._id)],
     comments: [comment],
     followers: [],
-	numFollows: 0
+    numFollows: 0,
+    allowComments: true
 });
 let d = new Date();
 d.setHours(23, 0, 0, 0);
@@ -77,7 +78,8 @@ const event2 = new Event({
 	eventType: [new mongoose.Types.ObjectId(interest._id), new mongoose.Types.ObjectId(interest2._id)],
     comments: [comment],
     followers: [],
-	numFollows: 0
+    numFollows: 0,
+    allowComments: true
 });
 
 const user2 = new User({

@@ -120,7 +120,8 @@ app.post('/event', sessionChecker, (req, res) => {
 								img: imgs,
 								eventType: eventType,
 								comments: [],
-								numFollows: 0
+								numFollows: 0,
+								allowComments: req.body.allowComments == null ? false : true
 							})
 							// save restaurant to the database
 							newEvent.save().then((event) => {
