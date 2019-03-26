@@ -32,6 +32,7 @@ const logoSrc = "../pictures/webPic/logo.png";
 const settingIconSrc = "../pictures/webPic/settings.png";
 const messgaeSrc = "../pictures/webPic/msg.png";
 const deleteIconSrc = "../pictures/webPic/delete.png";
+const viewIconSrc = "../pictures/webPic/view-icon.png";
 
 // TEST DATA!!
 const testEvent = new Event("BILL'S PARTY!!!", "Bill's Place", new Date(), "bla bla blas bal bal ba", "w1.jpg", null);
@@ -140,7 +141,7 @@ make.addEventListener('click', makeNewEvent);
 // DOM MANIPULATION
 function updateProfileArea(user) {
     profileArea.querySelector("#settingIcon").src = settingIconSrc
-    profileArea.querySelector(".profilePic").src = user.pic;
+    profileArea.querySelector(".profilePicture").src = user.pic;
     profileArea.querySelector("#profileInfo h1").textContent = user.userName;
     profileArea.querySelector(".description").textContent = user.description;
     profileArea.querySelector(".birthday").textContent = user.bday;
@@ -258,18 +259,22 @@ function createEventDom(event){
     const title = createNewElement("span", "title", null, event.title);
     const location = createNewElement("span", "location", null, event.location);
     const date = createNewElement("span", "date", null, getEventDate(event.date));
+
+    const toolDiv = createNewElement('div', 'toolDiv', null, null);
     const msgIcon = createNewElement("img", "msg");
     msgIcon.src = messgaeSrc;
-
     const del = createNewElement("img", "delete");
     del.src = deleteIconSrc;
+    const view = createNewElement("img", "viewEvent");
+    view.src = viewIconSrc;
+    toolDiv.append(msgIcon, del, view);
   
     const eventDiv = createNewElement("div", "event", `eventID${event.id}`);
     eventDiv.addEventListener("click", function (e){
         currentSelectedEvent = event;
         eventClicked(e);
     })
-    eventDiv.append(title, location, date, msgIcon, del);
+    eventDiv.append(title, location, date, toolDiv);
     return eventDiv;
 }
 
@@ -344,7 +349,9 @@ function eventClicked(e) {
         openMsgBox();
     } else if (e.target.className == "delete"){
         openDelBox();
-    } else{
+    } else if (e.target.className == "viewEvent") {
+        openViewPopUp(currentSelectedEvent, currentUser);
+    } else if (e.target.className != "toolDiv"){
         openEditPopUp(currentSelectedEvent);
     }
 }
@@ -371,6 +378,11 @@ function domCallback(newEvent) {
 
 function serverCallback(newEvent) {
     serverCall(newEvent);
+}
+
+function openViewPopUp(event, user) {
+    const popUp = new EventPopUp(event, user, true);
+    document.body.appendChild(popUp.getEventPopUp());   
 }
 
 /*-- Setting change section --*/
@@ -482,7 +494,6 @@ function loadPage() {
     loadEventData();
     loadUserData();
     loadEvents();
-    makePopUp.style.display = "none";
     updateProfileArea(currentUser);
 }
 // height: 100%;

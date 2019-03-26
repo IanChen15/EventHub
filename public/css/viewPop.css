@@ -355,6 +355,16 @@
     cursor: pointer;
 }
 
+.deleteComment {
+    margin-right: 20px;
+    color: rgb(236, 104, 104);
+}
+
+.deleteComment:hover {
+    color: rgb(240, 22, 22);
+    cursor: pointer;
+}
+
 #replyInput {
     margin-left: 5%;
     width: 100px;

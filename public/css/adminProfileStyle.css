@@ -110,16 +110,20 @@
     height: 20px;
     width: 20x;
     margin-top: 5px;
-    margin-left: 10px;
+    margin-left: 5px;
     margin-right: 2px;
 
     float: right;
     cursor: pointer;
 }
 
+.event .toolDiv {
+    float: right;
+    cursor: default;
+}
+
 .event img:hover{
-    height: 24px;
-    margin-top: 2px;
+    transform: scale(1.2);
 }
 
 
@@ -202,7 +206,7 @@
     width: 22.5px;
     height: 22.5px;
 }
-.profilePic {
+.profilePicture {
     width: 175px;
     height: 175px;
     margin: 25px 0px 0px 50%;
