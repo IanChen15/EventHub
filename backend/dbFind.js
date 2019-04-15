@@ -8,11 +8,11 @@ const { EventHubDB } = require('../db/EventHubDB')
 
 const { Event } = require('../models/event')
 const { User } = require('../models/user')
-const { Interest } = require('../models/interest')
+const { Category } = require('../models/category')
 const { Comment } = require('../models/event')
 function getFrontendEvent(objID){
     let date = new Date();
-    date.setDate(date.getDate() - 1);
+    date.setHours(0, 0, 0, 0);
     Event.find({date: { $gt: date}}, ['img', 'eventType', 'title', 'creator', 'location', 'date', 'description', 'comments', '_id'],
                 {sort: {date: 1}}).populate('eventType').populate('creator', 'username').populate('comments.user').exec((err, events) => {
         

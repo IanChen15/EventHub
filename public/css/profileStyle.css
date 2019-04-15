@@ -4,13 +4,19 @@ body #popUpBackground {
 }
 
 #mainSection {
+    position: relative;
+    padding: 0px;
+    width: 100%;
+    height: calc(100% - 46.4px - 30px);
+    overflow-x: hidden;
     overflow-y: auto;
 }
+
 /* Event Section */
 #eventSection, #settingSection{
     position: relative;
     overflow-y: auto;
-    overflow-x: visible;
+    overflow-x: hidden;
     margin-left: 30px;
     margin-top: 30px;
     margin-bottom: 30px;
@@ -59,6 +65,7 @@ body #popUpBackground {
     position: absolute;
     top: 50%;
     left: 50%;
+    max-width: 100%;
     -ms-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
     text-align: center;
@@ -68,12 +75,19 @@ body #popUpBackground {
 .eventInfo h1{
     color: #feffff;
     margin: 5px;
+    line-height: 36px;
+    text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
     /* margin-top: 3%; */
 }
 
 .eventInfo h3{
     color: #feffff;
     margin: 5px;
+    text-overflow: ellipsis;
+	white-space: nowrap;
+	overflow: hidden;
     /* margin-top: 3%; */
 }
 
@@ -144,8 +158,21 @@ body #popUpBackground {
 
  .message:hover {
     opacity: 0.5;
-    height: 30px;
-    width: 30px;
+    transform: scale(1.2);
+ }
+
+ .evEdit {
+    position: absolute;
+    cursor: pointer;
+    height: 25px;
+    width: 25px;
+    bottom: 5px;
+    right: 5px;
+ }
+
+ .evEdit:hover {
+    opacity: 0.5;
+    transform: scale(1.2);
  }
 
 /* Profile Section */
@@ -153,7 +180,7 @@ body #popUpBackground {
     background-color: #def2f1;
     display: inline-block;
     position: relative;
-    height: calc(100% - 60px);
+    height: calc(99% - 60px);
     min-height: 463.59px;
     width: calc(30% - 45px);
     margin-top: 30px;
@@ -176,7 +203,22 @@ body #popUpBackground {
     width: 22.5px;
     height: 22.5px;
 }
+
+#passwordIcon{
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    right: 10px;
+    top: 40px;    
+}
+
+#passwordIcon:hover {
+    cursor: pointer;
+    width: 22.5px;
+    height: 22.5px;
+}
 #profileArea .profilePic {
+    background-color: #def2f1;
     width: 175px;
     height: 175px;
     margin: 25px 0px 0px 50%;
@@ -184,7 +226,7 @@ body #popUpBackground {
     border-radius: 50%;
 }
 
-#followBUtton{
+#followButton{
     background-color: #2B7A78;
     width: 85px;
     padding: 10px;
@@ -193,9 +235,11 @@ body #popUpBackground {
     color: #feffff;
     cursor: pointer;
 }
-#followBUtton:hover{
+
+#followButton:hover{
     background-color: #3AAFA9;
 }
+
 #profileInfo {
     width: 80%;
     max-height: 80%;
@@ -270,6 +314,7 @@ body #popUpBackground {
 #profilePicSetting {
     margin: 0px;
     border-radius: 50%;
+    background-size: 175px 175px;
     height: 175px;
     width: 175px;
     position: absolute;
@@ -319,12 +364,11 @@ body #popUpBackground {
     overflow-y: auto;
     top: 0px;
     right: 0px;    
-}
-#interestList:hover{
     max-height: 120px;
     overflow-y: auto;
     overflow-x: hidden;
 }
+
 
 .interestSelection {
     text-align: center;
@@ -427,3 +471,100 @@ body #popUpBackground {
     max-height: 50vh;
     overflow: auto;
 }
+
+/* Edit Passwor Popup */
+#passPopBackground {
+    position: absolute;
+    z-index: 100;
+    height: 100%;
+    width: 100%;
+    top: 0px;
+    left: 0px;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+  }
+  
+  #passPop {
+    position: relative;
+    background-color: #DEF2F1;
+    width: 600px;
+    height: 450px;
+    margin: auto;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #17252A;
+  }
+  
+  #passPop .logo{
+    position: relative;
+    height: 75px;
+    margin-top: 15px;
+    margin-bottom: 0px;
+    margin-left: 50%;
+    transform: translateX(-50%)
+  }
+  
+  #passPop h2{
+    position: relative;
+    text-align: center;
+    padding: 0px;
+    margin: 15px 50px
+  }
+  
+  #passPop h4{
+    position: relative;
+    left: 100px;
+    margin: 5px;    
+  }
+  
+  #passPop input[type="password"]{
+    position: relative;
+    left: 100px; 
+    width: 400px;
+    height: 42px;
+    padding: 12px 20px;
+    margin: 2px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    box-sizing: border-box;   
+  }
+  
+  #passPop input[type="submit"] {
+    position: absolute;
+    left: 180px; 
+    bottom: 0px;
+    width: 240px;
+    height: 42px;
+    padding: 12px 20px;
+    margin: 15px 0px;
+    display: inline-block;
+    border: none;
+    box-sizing: border-box;
+    background-color: #2B7A78;
+    color: white;
+  }
+  #passPop .errMsg{
+    position: absolute;
+    text-align: left;
+    bottom: 62px;
+    left: 105px;
+    margin: 0px;
+    padding: 0px;
+    width: 100%;
+    height: 16px;
+    color: red;
+    /* text-align: center;
+    width: 100%; */
+  }
+  
+  #passPop h5 {
+    position: absolute;
+    bottom: 18px;
+    margin: 0px;
+    padding: 0px;
+    text-align: center;
+    width: 100%;
+    height: 16px;
+  
+  }
+  

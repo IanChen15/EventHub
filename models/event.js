@@ -16,6 +16,34 @@ const CommentSchema = new mongoose.Schema({
 	date: {
 		type: Date,
 		required: true
+	},
+	reply: [{
+		user: {
+			type: ObjectId,
+			ref: "User"
+		},
+		message: {
+			type: String,
+			required: true
+		}, 
+		date: {
+			type: Date,
+			required: true
+		},
+		isDeleted: {
+			type: Boolean, 
+			required: true
+		}, 
+		deletedText: {
+			type: String
+		}
+	}], 
+	isDeleted: {
+		type: Boolean, 
+		required: true
+	}, 
+	deletedText: {
+		type: String
 	}
 })
 // let's make a mongoose model a little differently
@@ -46,7 +74,7 @@ const EventSchema = new mongoose.Schema({
 	}, 
 	eventType: [{
 		type: ObjectId,
-		ref: "Interest",
+		ref: "Category",
 		required: true
 	}],
 	comments: {
@@ -64,6 +92,13 @@ const EventSchema = new mongoose.Schema({
 	allowComments: {
 		type: Boolean,
 		required: true
+	},
+	notification: {
+		type: String,
+		default: ""
+	},
+	address: {
+		type: String
 	}
 })
 

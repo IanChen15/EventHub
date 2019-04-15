@@ -17,74 +17,122 @@ const monthNames = ["January", "February", "March", "April", "May", "June",
 const dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 // PICTURE LOCATIONS!!!
-const logoSrc = "../pictures/webPic/logo.png";
-const settingIconSrc = "../pictures/webPic/settings.png";
-const messgaeSrc = "../pictures/webPic/msg.png";
-
-// TEST DATA!!
-const testEvent = new Event("BILL'S PARTY!!!", "Bill's Place", new Date(), "bla bla blas bal bal ba", "w1.jpg", null);
-const allCategories = ["cs", "math", "group study", "party", "other"];
-const testUser = new User("ian", "../pictures/profilePic/face.jpg", "I need sleep", "2019-03-06", ["CS", "Math","Other"]);
+const logoSrc = "/pictures/webPic/logo.png";
+const settingIconSrc = "/pictures/webPic/settings.png";
+const messgaeSrc = "/pictures/webPic/msg.png";
+const eventEditSrc = "/pictures/webPic/eventEdit.png";
 
 // GLOBAL VARIABLS (for page info below)
 let currentSelectedEvent = null;
-let currentUser =  testUser;
 
 // event lists
 const comingEvents = [];
 const pastEvents = [];
 const myEvents = [];
-
-getEventList();
+const followedUserEvents = [];
 
 
 /*----------------------------------------------------------------------*/
 /*-- Server call functions here --*/
 /*----------------------------------------------------------------------*/
 
-// do a pull from server and get events
-function getEventList() {
-    // idk why im here
-    const user = new User("ian", "../pictures/profilePic/face.jpg", "I need sleep", "2019-03-06", ["cs", "math","other"]);
-
-	const model1 = new Event("Hackathon", "Bahen, Center of I.T.", new Date(), "It's really fun", ["../pictures/eventPic/w2.jpg", "../pictures/eventPic/w1.jpg", "../pictures/eventPic/w4.jpg", "../pictures/eventPic/w5.jpg"], "cs", user.usrName);
-	const model2 = new Event("Math event", "Sidney Smith", new Date(), "It's really fun", ["../pictures/eventPic/w1.jpg", "../pictures/eventPic/w4.jpg", "../pictures/eventPic/w5.jpg"], "math", user.usrName);
-	const model3 = new Event("Bahen's stuff", "Bahen, Center of I.T.", new Date(), "It's really fun", ["../pictures/eventPic/w3.jpg", "../pictures/eventPic/w4.jpg", "../pictures/eventPic/w5.jpg"], "cs", user.usrName);
-	const model4 = new Event("CSSU Group Study", "Bahen, Center of I.T.", new Date(), "It's really fun", ["../pictures/eventPic/w4.jpg"], "group study", user.usrName);
-	const model5 = new Event("Bahen's party", "Bahen, Center of I.T.", new Date(), "It's really fun", ["../pictures/eventPic/w1.jpg", "../pictures/eventPic/w4.jpg", "../pictures/eventPic/w5.jpg"], "party", user.usrName);
-	const model6 = new Event("I ran out of Idea", "Bahen, Center of I.T.", new Date(), "It's really fun", ["../pictures/eventPic/w1.jpg"], "math", user.usrName);
-	const model7 = new Event("I ran out of Idea2", "Bahen, Center of I.T.", new Date(), "It's really fun", ["../pictures/eventPic/w3.jpg"], "cs", user.usrName);
-	const model8 = new Event("I ran out of Idea3", "Bahen, Center of I.T.", new Date(), "It's really fun", ["../pictures/eventPic/w4.jpg"], "party", user.usrName);
-	const model9 = new Event("I ran out of Idea4", "Bahen, Center of I.T.", new Date(), "It's really fun", ["../pictures/eventPic/w2.jpg"], "cs", user.usrName);
-	const model10 = new Event("I ran out of Idea2", "Bahen, Center of I.T.", new Date(), "It's really fun", ["../pictures/eventPic/w3.jpg"], "other", user.usrName);
-	const model11 = new Event("I ran out of Idea3", "Bahen, Center of I.T.", new Date(), "It's really fun", ["../pictures/eventPic/w4.jpg"], "party", user.usrName);
-	const model12 = new Event("I ran out of Idea4", "Bahen, Center of I.T.", new Date(), "It's really fun", ["../pictures/eventPic/w2.jpg"], "other", user.usrName);
-
-    comingEvents.push(model1);
-    comingEvents.push(model2);
-    comingEvents.push(model3);
-    comingEvents.push(model4);
-
-    pastEvents.push(model5);
-    pastEvents.push(model6);
-    pastEvents.push(model7);
-
-    myEvents.push(model8);
-    myEvents.push(model9);
-}
-
-// CONNECT WITH BACK-END!!!
-function saveUser(newUsr){
-    currentUser = newUsr
+// get user info from the server
+function getUserInfo() {
+	const urlStr = window.location.href
+	const urlArr = urlStr.split('/')
+	const id = urlArr[urlArr.length - 1]
+  
+	const url = '/profile/data/' + id
+	console.log("hello")
+	$.ajax({
+		method:'GET',
+		url: url,
+		dataType: 'json',
+		success: function(usr) {
+			updateProfileArea(usr)
+		},
+		error: function(err) {
+			//Fix This!!!
+			console.log("LOAD EVENT ERR!!");
+		}
+	});
 }
 
 function sendMsg(){
-    // For phase 2, this will be sending msg to each user that is following this event.
-    console.log(msgBox.querySelector(".msgContent").value);
+	const msg = document.querySelector(".msgContent").value
+	console.log(msg)
+	const url = '/events/sendNotif/' + currentSelectedEvent.id
+	console.log(url)
+	$.ajax({
+		method:'PATCH',
+		data: {notification: msg},
+		url: url,
+		dataType: 'json',
+		success: function(data) {
+			console.log(data)
+		},
+		statusCode: {
+			500: function (){
+				alert("Internal Server Error\n");
+			},
+			404: function () {
+				alert("Event does not exists. Reload page");
+				window.location.reload()
+			}, 
+			401: function() {
+				alert("No permission! U sucks hahahahaha!");
+			}
+		}
+	});
 }
 
-function serverCall(newEvent) {
-
+// does the server saving when user is modifying 
+function saveUser(){
+    return new Promise((resolve, reject) => {
+		const interestList = document.querySelector("#interestList").childNodes;
+		const hiddenList = document.querySelector(".interestsHidden").childNodes;
+		interestList.forEach((cat, index) => {
+			hiddenList[index].selected = cat.style.backgroundColor == darkGreen;
+		})
+		const urlStr = window.location.href
+		const urlArr = urlStr.split('/')
+		const id = urlArr[urlArr.length - 1]
+        let url = `/profile/update/${id}`
+		document.querySelector(".hiddenDescription").value = document.querySelector("#userDescriptionInput").value 
+		$("#profileForm").ajaxSubmit({
+			url: url, 
+			type: 'patch', 
+			enctype: 'multipart/form-data',
+			processData: false,  // Important!
+			success: function (user) {
+				resolve(user);
+			},
+			error: function (err) {
+				console.log(err);
+				reject(err);
+            },
+            statusCode: {
+                401: function() {
+					openLogInPopup("Session Expired! Please sign in!").then (_ => {
+						window.location.reload(true); 
+					})
+				},
+				500: function() {
+					alert("Internal Server Error\n")
+                },
+                404: function() {
+                    alert("Something went wrong reload the page\n");
+                    window.location.reload(true); 
+                },
+                409: function() {
+                    alert("User name exists\n");
+                },
+                422: function() {
+                    alert("Invalid Profile Picture\n");
+                }
+            }
+		});	
+	});
 }
 
 /*----------------------------------------------------------------------*/
@@ -102,17 +150,33 @@ const profileArea = document.querySelector("#profileArea");
 const settingIcon = document.querySelector("#settingIcon");
 const msgBox = document.querySelector("#msgBox");
 const notBox = document.querySelector("#notBox");
+const followBtn = document.querySelector("#followButton");
+const upComing = document.querySelector("#upComing");
+const past = document.querySelector("#pastEvents");
+const userEvents = document.querySelector("#myEvents");
+const friendEvents = document.querySelector("#followUserEvents");
 
 /*--------------- Bunch of add-listener calls -----------------------*/
 
 // EVENT LISTENERS!!!
-settingIcon.addEventListener("click", settingClicked);
+if(settingIcon != null) {
+	settingIcon.addEventListener("click", settingClicked);
+}
 msgBox.addEventListener("click", msgBoxClicked);
 notBox.addEventListener("click", notBoxClicked);
-document.querySelector("#upComing").addEventListener("click", loadUpComing);
-document.querySelector("#pastEvents").addEventListener("click", loadPastEvents);
-document.querySelector("#myEvents").addEventListener("click", loadMyEvents);
-
+if(upComing) {
+	upComing.addEventListener("click", loadUpComing);
+}
+if(past) {
+	past.addEventListener("click", loadPastEvents);
+}
+userEvents.addEventListener("click", loadMyEvents);
+if(friendEvents) {
+	friendEvents.addEventListener("click", loadFollowedUserEvents);
+}
+if(followBtn) {
+	followBtn.addEventListener("click", followClicked);
+}
 // Below for make new event
 // or edit?????????????????????
 make.addEventListener('click', makeNewEvent);
@@ -125,12 +189,8 @@ make.addEventListener('click', makeNewEvent);
 
 function addEvent(event) {
     const img = createNewElement("img", "eventImg");
-	if(event.img[0] == null) {
-		img.src = "w3.jpg"
-	}
-	else {
-		img.src = event.img[0];
-	}    
+	img.src = event.img[0];
+	    
     const darkSheet = createNewElement("div", "darkSheet");
 
     const title = createNewElement("h1", null, null, event.title);
@@ -156,7 +216,7 @@ function addEvent(event) {
     const side = createNewElement("div", "side");
     side.appendChild(eventLogo);
 
-    const eventDiv = createNewElement("div", "event", `eventID${event.id}`)
+    const eventDiv = createNewElement("div", "event", event.id)
     eventDiv.append(infoContainer, side);
     eventDiv.addEventListener("click", function (e) {
         currentSelectedEvent = event;
@@ -167,7 +227,7 @@ function addEvent(event) {
 
 function addUserEvent(event) {
     const img = createNewElement("img", "eventImg");
-    img.src = event.img;
+    img.src = event.img[0];
     
     const darkSheet = createNewElement("div", "darkSheet");
 
@@ -190,15 +250,18 @@ function addUserEvent(event) {
 
     const eventLogo = createNewElement("div", "eventLogo");
     eventLogo.append(logo, eventHub);
-
     const side = createNewElement("div", "side");
     side.appendChild(eventLogo);
 
     const msg = createNewElement("img", "message");
     msg.src = messgaeSrc;
     msg.addEventListener("click", msgClicked)
-    const eventDiv = createNewElement("div", "event", `eventID${event.id}`)
-    eventDiv.append(infoContainer, side, msg);
+
+    const edit = createNewElement('img', "evEdit");
+    edit.src = eventEditSrc;
+
+    const eventDiv = createNewElement("div", "event", event.id)
+    eventDiv.append(infoContainer, side, msg, edit);
     eventDiv.addEventListener("click", function (e) {
         currentSelectedEvent = event;
         userEventClicked(e);
@@ -207,91 +270,29 @@ function addUserEvent(event) {
 }
 
 function addEventNotification(event){
-    let eventDom = eventSection.querySelector(`#eventID${event.id}`);
+	console.log(event)
+    let eventDom = document.getElementById(event.id);
     if (eventDom != null && eventDom.querySelector(".notificationIcon") == null){
         let noti = createNewElement("div", "notificationIcon");
         noti.appendChild(createNewElement("span", null, null, "!"));
         eventDom.appendChild(noti);
     }
 }
-function updateProfileArea(user) {
-    profileArea.querySelector("#settingIcon").src = settingIconSrc
-    profileArea.querySelector(".profilePic").src = user.pic;
-    profileArea.querySelector("#profileInfo h1").textContent = user.usrName;
-    profileArea.querySelector(".description").textContent = user.description;
-    profileArea.querySelector(".birthday").textContent = user.bday;
-    profileArea.querySelector(".interests").textContent = function (){
-        let s = "";
-        for(let i = 0; i < user.interests.length; i++){
-            s += `#${user.interests[i]} `;
-        }
-        return s;
-    }();
-}
-function loadUserSetting(user) {
-    const profilePic = createNewElement("img", null, "profilePicSetting");
-    profilePic.src = user.pic;
+function updateProfileArea(usr) {
+	
+	if(settingIcon != null) {
+		settingIcon.src = settingIconSrc
+	}
+	profileArea.querySelector(".profilePic").src = usr.profilePic
+	profileArea.querySelector(".username").innerText = usr.username
+	profileArea.querySelector(".description").innerText = usr.description
+	profileArea.querySelector(".username").innerText = usr.username
+	let interestString = ""
+	usr.interests.forEach(function (obj) {
+		interestString += `#${obj.type} `;
+	})
+	profileArea.querySelector(".interests").innerText = interestString
 
-    const choosePhoto = createNewElement("input", null, "choosePhoto");
-    choosePhoto.type = "file";
-    choosePhoto.accept = "image/*";
-    choosePhoto.addEventListener("change", updatePhoto);
-
-    const editPhoto = createNewElement("div", null, "editPhoto");
-    editPhoto.append(profilePic, choosePhoto);
-
-    const userName = createNewElement("h2", null, null, "Username");
-    
-    const userNameInput = createNewElement("input", null, "userNameInput");
-    userNameInput.type = "text";
-    userNameInput.value = user.usrName;
-
-    const bday = createNewElement("h2", null, null, "Birthday");
-    
-    const birthdayInput = createNewElement("input", null, "birthdayInput");
-    birthdayInput.type = "date";
-    birthdayInput.value = user.bday;
-    
-    const descr = createNewElement("h2", null, null, "Description");
-    
-    const descriptionInput = createNewElement("textarea", null, "userDescriptionInput");
-    descriptionInput.value = user.description;
-
-    const interests = createNewElement("h2", null, null, "Interests");
-    
-    const interestList = createNewElement("div", null, "interestList");
-
-    for(let i = 0; i < allCategories.length; i++){
-        let cat = allCategories[i];
-        let interest = createNewElement("div", "interestSelection", `catID${cat}`, cat);
-        if (user.interests.includes(cat)){
-            interest.style.backgroundColor = darkGreen;
-        }
-
-        interestList.appendChild(interest);
-
-    }
-
-    const interestContainer = createNewElement("div", null, "interestContainer");
-    interestContainer.append(interests, interestList);
-
-    const editProfile = createNewElement("div", null, "editProfile");
-    editProfile.append(userName, userNameInput, bday, birthdayInput, descr, descriptionInput, interestContainer);
-
-    const saveButton = createNewElement("input", null, "saveButton");
-    saveButton.type = "submit";
-    saveButton.value = "Save";
-
-    const profileForm = createNewElement("form", null, "profileForm");
-    profileForm.append(editPhoto, editProfile, saveButton);
-
-    const settingArea = createNewElement("div", "settingsArea");
-    settingArea.appendChild(profileForm);
-    const popup =  createNewElement("div", null, "popUp");
-    popup.appendChild(settingArea);
-    popup.addEventListener("click", popupClicked);
-
-    document.querySelector("body").appendChild(popup);
 }
 
 /** Bunch of helper functions for page view dom functions */
@@ -309,9 +310,11 @@ function hideMsgBox() {
     msgBox.querySelector(".msgContent").value = "";
 }
 
-function openNotificationBox() {
+function openNotificationBox(msg) {
     let notBox = document.querySelector("#notBox");
+	let msgSection = document.querySelector(".notificationSection")
     notBox.style.display = "inline-block";
+	msgSection.innerText = msg
 }
 
 function hideNotificationBox() {
@@ -325,23 +328,168 @@ function clearEvents() {
 
 function loadUpComing(){
     clearEvents()
-    for (let i = 0; i < comingEvents.length; i++){
-        addEvent(comingEvents[i]);
-    }
+    comingEvents.length = 0;
+    const urlStr = window.location.href
+    const urlArr = urlStr.split('/')
+    const id = urlArr[urlArr.length - 1]
+
+    const url = '/profile/events/upcomming/' + id
+    $.ajax({
+        method:'GET',
+        url: url,
+        dataType: 'json',
+        success: function(new_events) {
+            new_events.forEach(event => {
+                event.date = new Date(event.date)
+                comingEvents.push(event)
+            })
+			if(comingEvents.length == 0) {
+				const noReult = createNewElement("img", null, "noReult", null)
+                noReult.src = "/pictures/webPic/nores.png";
+                noReult.style = "width: auto;";
+                noReult.style.height = "90%";
+				eventSection.appendChild(noReult)
+			}
+			else {
+				for (let i = 0; i < comingEvents.length; i++){
+					addEvent(comingEvents[i]);
+					if(comingEvents[i].notification != "") {
+						addEventNotification(comingEvents[i])
+					}
+				}
+			}
+        },
+        statusCode: {
+            500: function (){
+                alert("Internal Server Error\n");
+            }
+        }
+    });
 }
 
 function loadPastEvents(){
     clearEvents()
-    for (let i = 0; i < pastEvents.length; i++){
-        addEvent(pastEvents[i]);
-    }
+    pastEvents.length = 0
+    const urlStr = window.location.href
+    const urlArr = urlStr.split('/')
+    const id = urlArr[urlArr.length - 1]
+
+    const url = '/profile/events/past/' + id
+    $.ajax({
+        method:'GET',
+        url: url,
+        dataType: 'json',
+        success: function(new_events) {
+            for(let i = 0; i < new_events.length; i++) {
+                new_events[i].date = new Date(new_events[i].date)
+                pastEvents.push(new_events[i])
+            }
+			if(pastEvents.length == 0) {
+				const noReult = createNewElement("img", null, "noReult", null)
+                noReult.src = "/pictures/webPic/nores.png";
+                noReult.style = "width: auto;";
+                noReult.style.height = "90%";
+				eventSection.appendChild(noReult)
+			}
+			else {
+				for (let i = 0; i < pastEvents.length; i++){
+					addEvent(pastEvents[i]);
+					if(pastEvents[i].notification != "") {
+						addEventNotification(pastEvents[i])
+					}
+				}
+			}
+        },
+        statusCode: {
+            500: function (){
+                alert("Internal Server Error\n");
+            }
+        }
+    });
 }
 
 function loadMyEvents(){
     clearEvents()
-    for (let i = 0; i < myEvents.length; i++){
-        addUserEvent(myEvents[i]);
-    }
+    myEvents.length = 0;
+    const urlStr = window.location.href
+    const urlArr = urlStr.split('/')
+    const id = urlArr[urlArr.length - 1]
+
+    const url = '/profile/events/myevents/' + id
+    $.ajax({
+        method:'GET',
+        url: url,
+        dataType: 'json',
+        success: function(new_events) {
+				for(let i = 0; i < new_events.length; i++) {
+					new_events[i].date = new Date(new_events[i].date)
+					myEvents.push(new_events[i])
+				}
+				if(myEvents.length == 0) {
+					const noReult = createNewElement("img", null, "noReult", null)
+                    noReult.src = "/pictures/webPic/nores.png";
+                    noReult.style = "width: auto;";
+                    noReult.style.height = "90%";
+					eventSection.appendChild(noReult)
+				}
+				else {
+					if(upComing && past && friendEvents) {
+						for (let i = 0; i < myEvents.length; i++){
+							addUserEvent(myEvents[i]);
+						}
+					}
+					else {
+						for (let i = 0; i < myEvents.length; i++){
+							addEvent(myEvents[i]);
+						}
+					}
+				}
+        },
+        statusCode: {
+            500: function (){
+                alert("Internal Server Error\n");
+            }
+        }
+    });
+}
+
+function loadFollowedUserEvents() {
+    clearEvents()
+    followedUserEvents.length = 0
+    const urlStr = window.location.href
+    const urlArr = urlStr.split('/')
+    const id = urlArr[urlArr.length - 1]
+
+    const url = '/profile/events/followedUsers/' + id
+    $.ajax({
+        method:'GET',
+        url: url,
+        dataType: 'json',
+        success: function(new_events) {
+            for(let i = 0; i < new_events.length; i++) {
+                new_events[i].date = new Date(new_events[i].date)
+                followedUserEvents.push(new_events[i])
+            }
+			if(followedUserEvents.length == 0) {
+				const noReult = createNewElement("img", null, "noReult", null)
+                noReult.src = "/pictures/webPic/nores.png";
+                noReult.style = "width: auto;";
+                noReult.style.height = "90%";
+				eventSection.appendChild(noReult)
+			}
+			else {
+				for (let i = 0; i < followedUserEvents.length; i++){
+					addEvent(followedUserEvents[i]);
+				}
+			}
+        },
+        statusCode: {
+            500: function (){
+                alert("Internal Server Error\n");
+            }
+        }
+    });
+
 }
 
 /** Below is for make new event section with helpers */
@@ -351,17 +499,75 @@ function loadMyEvents(){
 function makeNewEvent(e) {
 	if(e.target.className == "make") {
 		e.preventDefault();
-		const popUp = new ModPopUp(null, currentUser, domCallback, serverCallback);
-		document.body.appendChild(popUp.getPopUp());
+		$.ajax({
+			method:'GET',
+			url: '/checkLoggedIn',
+			dataType: 'json',
+			success: function(res) {
+				if (res.loggedIn){
+					const popUp = new ModPopUp(null, domCallback, serverCallback);
+					document.body.appendChild(popUp.getPopUp());
+				} else {
+					openLogInPopup("Session Expired! Please sign in!").then (_ => {
+						window.location.reload(true); 
+					})
+				}
+			},
+			statusCode: {
+				401: function() {
+					openLogInPopup("Session Expired! Please sign in!").then (_ => {
+						window.location.reload(true); 
+					})
+				},
+				500: function() {
+					alert("Internal Server Error\n")
+				}
+			}
+		});
 	}
 }
 
-function domCallback(newEvent) {
-
+function domCallback() {
+	window.location.reload();
+}
+function  serverCallback(form) {
+	return new Promise ((resolve, reject) => {
+		form.ajaxSubmit({
+			url: '/addevent', 
+			type: 'post', 
+			enctype: 'multipart/form-data',
+			processData: false,  // Important!
+			success: function (data) {
+				data.date = new Date(data.date);
+				resolve(data);
+			},
+			error: function (err) {
+				reject(err);
+			}
+		});	
+	})
+}
+function editEventDomCallback() {
+    window.location.reload();
 }
 
-function serverCallback(newEvent) {
-    serverCall(newEvent);
+function editEventServerCallback(form) {
+    console.log(form)
+	return new Promise ((resolve, reject) => {
+		form.ajaxSubmit({
+			url: `/event/${currentSelectedEvent.id}`,
+			type: 'patch', 
+			enctype: 'multipart/form-data',
+			processData: false,  // Important!
+			success: function (data) {
+				data.date = new Date(data.date);
+				resolve(data);
+			},
+			error: function (err) {
+				reject(err);
+			}
+		});	
+	})
 }
 
 /*----------------------------------------------------------------------*/
@@ -369,6 +575,70 @@ function serverCallback(newEvent) {
 /*---Helper functions for event listeners included----------------------*/
 /*---Note some may involve server calls-------------------------------- */
 /*----------------------------------------------------------------------*/
+// For follow button.
+function followClicked(e) {
+	e.preventDefault();
+    console.log(e.target.id)
+	if(e.target.id == "followButton") {
+		const urlStr = window.location.href
+		const urlArr = urlStr.split('/')
+		const id = urlArr[urlArr.length - 1]
+        let url = (e.target.textContent == "Follow") ? '/users/follows/user' : '/users/unfollows/user' 
+        $.ajax({
+            method:'PATCH',
+            data: {id: id},
+            url: url,
+            dataType: 'json',
+            success: function(data) {
+                window.location.reload();
+            },
+            statusCode: {
+                500: function (){
+                    alert("Internal Server Error\n");
+                },
+                404: function (){
+                    alert("Something Went Wrong. Please Reload the page. 1")
+                    window.location.reload();
+                }, 
+                400: function (){
+                    alert("Something Went Wrong. Please Reload the page. 2")
+                    window.location.reload();
+                },
+                401: function() {
+					openLogInPopup("Session Expired! Please sign in!").then (_ => {
+						window.location.reload(true); 
+					})
+				}
+            }
+		});
+	}
+}	
+
+function getEventMsg(id) {
+	url = '/event/' + id
+	return new Promise((resolve, reject) => {	
+		$.ajax({
+			method:'GET',
+			url: url,
+			dataType: 'json',
+			success: function(event) {
+				console.log(event)
+				resolve(event.notification);
+			},
+			statusCode: {
+				500: function (){
+					alert("Internal Server Error\n");
+					reject()
+				},
+				400: function (){
+					alert("Something Went Wrong. Please Reload the page.")
+					window.location.reload();
+				}
+			}
+		});
+	});
+}
+
 
 function eventClicked(e) {
     e.preventDefault();
@@ -376,42 +646,42 @@ function eventClicked(e) {
 
     console.log(e.target.tagName == "SPAN")
     if (e.target.className == "notificationIcon" || e.target.tagName == "SPAN"){
-        openNotificationBox();
+		getEventMsg(currentSelectedEvent.id).then(msg => {
+			openNotificationBox(msg);
+		}).catch(err => {
+			console.log(err)
+		})
     }
     else {
-        //REMEBER TO CHANGE CURRENTSELLECTEDEVENT BACK TO NULL WHEN YOU AREF FINISHED MICHAEL!!!
         openEventPopUp(currentSelectedEvent); // show event 
 
     } 
 } 
 
 function userEventClicked(e) {
-    if (e.target.className != "message"){
-          openEditPopUp(currentSelectedEvent); // edit event
+    if (e.target.className != "message" && e.target.className != "evEdit"){
+        
+        openEventPopUp(currentSelectedEvent); // edit event
+    }
+    else if (e.target.className == "evEdit") {
+        openEditPopUp(currentSelectedEvent);
     }
 }
 
 function openEventPopUp(event) {
-    const popUp = new EventPopUp(event, currentUser);
+    const popUp = new EventPopUp(event, 0);
     const body = document.querySelector('body');
     body.appendChild(popUp.getEventPopUp());
 }
 
 
 function openEditPopUp(event) {
-    const popup = new ModPopUp(event, currentUser, domCallback, serverCallback);
+    const popup = new ModPopUp(event, editEventDomCallback, editEventServerCallback);
     document.body.appendChild(popup.getPopUp());
 }
 
-function settingClicked(e) {
-    e.preventDefault();
-    loadUserSetting(currentUser);   
-}
-
-
 function msgClicked(e) {
     e.preventDefault();
-
     openMsgBox();
 }
 
@@ -423,8 +693,31 @@ function msgBoxClicked(e) {
         }
         else if (e.target.className == "submitMsg"){
             e.preventDefault()
-            sendMsg();
-            hideMsgBox();
+			$.ajax({
+				method:'GET',
+				url: '/checkLoggedIn',
+				dataType: 'json',
+				success: function(res) {
+					if (res.loggedIn){
+						sendMsg();
+						hideMsgBox();
+					} else {
+						openLogInPopup("Session Expired! Please sign in!").then (_ => {
+							window.location.reload(true); 
+						})
+					}
+				},
+				statusCode: {
+					401: function() {
+						openLogInPopup("Session Expired! Please sign in!").then (_ => {
+							window.location.reload(true); 
+						})
+					},
+					500: function() {
+						alert("Internal Server Error\n")
+					}
+				}
+			});
         }
     }
 }
@@ -439,45 +732,33 @@ function notBoxClicked(e) {
 
 // EVENT HANDLERS FOR Setting!!!!!
 
-function popupClicked(e) {
-    if (e.target.id == "popUp"){
-        e.preventDefault();
-        exitPopup();
-    } else if ( e.target.id == "saveButton") {
-        e.preventDefault();
-        saveProfile(currentUser);
-        updateProfileArea(currentUser);
-        exitPopup();
-    } else if (e.target.className == "interestSelection") {
-        e.preventDefault();
-        selectInterest(e.target);
-    }
-}
+// function popupClicked(e) {
+//     if (e.target.id == "popUp"){
+//         e.preventDefault();
+//         exitPopup();
+//     } else if ( e.target.id == "saveButton") {
+//         e.preventDefault();
+// 		saveUser().then(user => {
+// 			updateProfileArea(user);
+// 			exitPopup();
+
+// 		}).catch(err => {
+// 			// Fix this!
+// 			console.log("error saving user");
+// 		});
+
+//     } else if (e.target.className == "interestSelection") {
+//         e.preventDefault();
+//         selectInterest(e.target);
+//     }
+// }
 
 // DOM SAVING
 function updatePhoto(e) {
     let filepath = e.target.files[0];
     if (filepath != null){
-        filepath = filepath.name;
-        document.querySelector("#profilePicSetting").src = filepath;
+        document.getElementById('profilePicSetting').style.backgroundImage = `url(${URL.createObjectURL(filepath)})`;
     }
-}
-function saveProfile(user) {
-    let usrname = document.querySelector("#userNameInput").value.trim()
-    let pic = document.querySelector("#profilePicSetting").src; 
-    let bday = document.querySelector("#birthdayInput").value;
-    let des = document.querySelector("#userDescriptionInput").value.trim();
-    let interests = new Array();
-    
-    for(let i = 0; i < allCategories.length; i++){
-        let cat = allCategories[i];
-        let domCat = document.querySelector(`#catID${cat}`);
-        if (domCat != null && domCat.style.backgroundColor == darkGreen){
-            interests.push(cat);
-        }
-    }
-    let newUser = new User(usrname, pic, des, bday, interests);
-    saveUser(newUser);
 }
 
 function selectInterest(interest) {
@@ -509,20 +790,6 @@ function createNewElement(type, clss, id, txt) {
     return container;
 }
 
-// below is used to init the page
-function loadPage() {
-    loadUpComing();
-    addEventNotification(comingEvents[0]);
-    updateProfileArea(currentUser);
-	makePopUp.style.display = "none";
-}
-// height: 100%;
-//     width: 100%;
-//     text-align: center;
-//     position: absolute;
-// 	top: 0px;
-// 	left: 0px;	 
-//     overflow: hidden;
-//     background-color: rgba(0, 0, 0, 0.5);
 
-loadPage(); 
+getUserInfo();
+document.querySelector("#topBar li").click()

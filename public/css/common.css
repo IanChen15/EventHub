@@ -27,7 +27,7 @@ body {
     height: 100%;
     margin: 0px;
     padding: 0px;
-    min-width: 800px;
+    min-width: 865px;
     min-height: 0px;
     position: relative;
 	font-family: Larsseit,'Helvetica Neue',Helvetica,Arial,Sans-serif;
@@ -45,7 +45,9 @@ body {
   float: left;
   cursor: pointer;
 }
-
+#topBar li.selected {
+  background-color: #2B7A78;
+}
 #topBar li a {
 	display: block;
 	text-align: center;
@@ -75,7 +77,7 @@ body {
     width: 100%;
     height: calc(100% - 46.4px - 30px);
     overflow-x: hidden;
-    overflow-y: auto; 
+    overflow-y: hidden; 
 }
 
 /* Footer */
@@ -107,4 +109,199 @@ body {
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
   background: #555; 
+}
+
+
+#loginPopBackground {
+  position: absolute;
+  z-index: 100;
+  height: 100%;
+  width: 100%;
+  top: 0px;
+  left: 0px;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+}
+
+#loginPop {
+  position: relative;
+  background-color: #DEF2F1;
+  width: 600px;
+  height: 400px;
+  margin: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #17252A;
+}
+
+#loginPop .logo{
+  position: relative;
+  height: 75px;
+  margin-top: 15px;
+  margin-bottom: 0px;
+  margin-left: 50%;
+  transform: translateX(-50%)
+}
+
+#loginPop h2{
+  position: relative;
+  text-align: center;
+  padding: 0px;
+  margin: 15px 50px
+}
+
+#loginPop h3{
+  position: relative;
+  left: 100px;
+  margin: 5px;    
+}
+
+#loginPop input[type="text"], #loginPop input[type="password"]{
+  position: relative;
+  left: 100px; 
+  width: 400px;
+  height: 42px;
+  padding: 12px 20px;
+  margin: 2px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;   
+}
+
+#loginPop input[type="submit"] {
+  position: relative;
+  left: 180px; 
+  width: 240px;
+  height: 42px;
+  padding: 12px 20px;
+  margin: 20px 0px;
+  display: inline-block;
+  border: none;
+  box-sizing: border-box;
+  background-color: #2B7A78;
+  color: white;
+}
+#loginPop .errMsg{
+  position: absolute;
+  text-align: left;
+  bottom: 83px;
+  left: 105px;
+  margin: 0px;
+  padding: 0px;
+  width: 100%;
+  height: 16px;
+  color: red;
+}
+
+#loginPop h5 {
+  position: absolute;
+  bottom: 18px;
+  margin: 0px;
+  padding: 0px;
+  text-align: center;
+  width: 100%;
+  height: 16px;
+
+}
+
+
+
+
+
+
+
+
+#passPopBackground {
+  position: absolute;
+  z-index: 100;
+  height: 100%;
+  width: 100%;
+  top: 0px;
+  left: 0px;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+}
+
+#passPop {
+  position: relative;
+  background-color: #DEF2F1;
+  width: 600px;
+  height: 450px;
+  margin: auto;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #17252A;
+}
+
+#passPop .logo{
+  position: relative;
+  height: 75px;
+  margin-top: 15px;
+  margin-bottom: 0px;
+  margin-left: 50%;
+  transform: translateX(-50%)
+}
+
+#passPop h2{
+  position: relative;
+  text-align: center;
+  padding: 0px;
+  margin: 15px 50px
+}
+
+#passPop h4{
+  position: relative;
+  left: 100px;
+  margin: 5px;    
+}
+
+#passPop input[type="password"]{
+  position: relative;
+  left: 100px; 
+  width: 400px;
+  height: 42px;
+  padding: 12px 20px;
+  margin: 2px;
+  display: inline-block;
+  border: 1px solid #ccc;
+  box-sizing: border-box;   
+}
+
+#passPop input[type="submit"] {
+  position: absolute;
+  left: 180px; 
+  bottom: 0px;
+  width: 240px;
+  height: 42px;
+  padding: 12px 20px;
+  margin: 15px 0px;
+  display: inline-block;
+  border: none;
+  box-sizing: border-box;
+  background-color: #2B7A78;
+  color: white;
+}
+#passPop .errMsg{
+  position: absolute;
+  text-align: left;
+  bottom: 62px;
+  left: 105px;
+  margin: 0px;
+  padding: 0px;
+  width: 100%;
+  height: 16px;
+  color: red;
+  /* text-align: center;
+  width: 100%; */
+}
+
+#passPop h5 {
+  position: absolute;
+  bottom: 18px;
+  margin: 0px;
+  padding: 0px;
+  text-align: center;
+  width: 100%;
+  height: 16px;
+
 }

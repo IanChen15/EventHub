@@ -7,90 +7,491 @@
 
 /*
 * This function makes the pop up
+* admin 1 : admin, admin 2 : super admin
 */
-function EventPopUp(event, user, adminMode) {
-    // used for hardcode part
-    const maxReply = 1;
-    const maxComment = 1;
-    const loadNumber = 1;
+function EventPopUp(event, adminMode) {
+    // used for comment part
+    const maxReply = 5;
+    const loadNumber = 10;
+    const commentRefreshTime = 1000 * 15;
+    let end = 0;
+    let startDate = new Date();
+    let newDate = null;
 
-    // used for comment id hardcode
-    let commentIdCount = 10;
+    let exitRefresh = false;
+
+    const comments = [];
 
     // global img array for slider
     const imgSlideContent = [];
     let imgSlideIndex = 0;
-    // for users in the comment section
-    const users = [];
-    const currentUser = user;
-    const isJoined = getEvent(event);
 
     // This refer to this pop-up element
+    const commentInputWarning = createNewElement('p', 'red', "commentInputWarning", null);
+    const moreComment = createMoreBar("Loading");
+    moreComment.id = 'moreComment';
     this.popUp = createEventPopUp(event);
+    const joinButton = this.popUp.querySelector('#joinButton');
+    const commentArea = this.popUp.querySelector('#commentArea');
+    const googleMap = this.popUp.querySelector('#googleMap');
+    if (event.address != null && event.address != "") {
+        getGoogleMap();
+    }
+    console.log(event);
+    isJoined();
+    getComments();
+    setTimeout(getNewCommentsRefresh, commentRefreshTime);
+    moreComment.innerText = "More Comment";
+    moreComment.addEventListener('click', moreBarClick);
 
     /*----------------------------------------------------------------------*/
     /*-- Server call functions here --*/
     /*----------------------------------------------------------------------*/
 
-    /*
-    * Gets event info from the server and return if this event is followed
-    * by the login user.
-    */
-    function getEvent(event) {
-        // clear any old comments
-        event.comment = [];
-        event.commentLoaded = 0;
+    // get comments from server for this event
+    function getComments() {
+        $.ajax({
+            method:'GET',
+            url: `/comment/${event.id}/${loadNumber}/${startDate.toISOString()}`,
+            success: function(res) {
+                for (let i = 0 ; i < res.comments.length ; i++) {
+                    res.comments[i].date = new Date(res.comments[i].date);
+                    if (res.comments[i].reply.length > 0) {
+                        res.comments[i].replyLoaded = 0;
+                        for (let j = 0 ; j < res.comments[i].reply.length ; j++) {
+                            res.comments[i].reply[j].date = new Date(res.comments[i].reply[j].date);
+                        }
+                    }
+                    comments.push(res.comments[i]);
+                }
+                end = res.isEnd;
+                if (res.comments.length > 0){
+                    startDate = res.comments[res.comments.length-1].date;
+                    if (newDate == null) {
+                        newDate = res.comments[0].date;
+                    }
+                }
+                createComments(res.comments);
+            },
+            error: function(err) {
+                if (err.responseJSON) {
+                    if (err.responseJSON.link) {
+                        doJump(err.responseJSON.link);
+                    }
+                }
+            },
+            statusCode: {
+                500: function () {
+                    alert("Internal Server ERROR");
+                },
+                404: function () {
+                    alert("Event not found, refresh now.");
+                }
+            } 
+        });
+    }
 
-        const comment1 = new Comment(1, "Mike", "I think this is gud!!", new Date("March 3, 2019 18:00:00"));
-        const comment2 = new Comment(2, "Ian", "I think this is gud!!", new Date("March 3, 2019 19:00:00"));
-        const subComment3 = new Comment(3, "Mike", "I think this is gud!!", new Date("March 3, 2019 18:30:00"));
-        const subComment4 = new Comment(4, "Bill", "I think this is gud!!", new Date("March 3, 2019 21:00:00"));
-        const subComment6 = new Comment(6, "Bill", "I think this is gud!!", new Date("March 3, 2019 23:00:00"));
-        const comment5 = new Comment(5, "Mike", "I think this is gud!!", new Date("March 3, 2019 22:00:00"));
-        comment2.addReply(subComment3);
-        comment2.addReply(subComment4);
-        comment2.addReply(subComment6);
-        event.addComment(comment1);
-        event.addComment(comment2);
-        event.addComment(comment5);
     
-        // push the login user
-        users.push(currentUser);
-        users.push(new User("Ian", "../pictures/profilePic/face.jpg", "I need sleep", "2019-03-06", ["cs", "math","other"]), new User("Bill", "../pictures/profilePic/face.jpg", "I need sleep", "2019-03-06", "Bahen, Center of I.T.", ["cs", "math","other"]), new User("Mike", "../pictures/profilePic/face.jpg", "I need sleep", "2019-03-06", "Bahen, Center of I.T.", ["cs", "math","other"]));
-        
-        return false;
+    // get new comment from server
+    function getNewComments() {
+        console.log(newDate);
+        if (comments.length == 0) {
+            console.log('this branch')
+            newDate = null;
+            startDate = new Date();
+            getComments();
+            return;
+        }
+        $.ajax({
+            method:'GET',
+            url: `/newComment/${event.id}/${newDate.toISOString()}`,
+            success: function(res) {
+                for (let i = res.comments.length-1 ; i >= 0 ; i--) {
+                    res.comments[i].date = new Date(res.comments[i].date);
+                    if (res.comments[i].reply.length > 0) {
+                        res.comments[i].replyLoaded = 0;
+                        for (let j = 0 ; j < res.comments[i].reply.length ; j++) {
+                            res.comments[i].reply[j].date = new Date(res.comments[i].reply[j].date);
+                        }
+                    }
+                    comments.push(res.comments[i]);
+                    insertNewCommentBlock(res.comments[i]);
+                }
+                if (res.comments.length > 0){
+                    newDate = res.comments[0].date;
+                }
+            },
+            error: function(err) {
+                if (err.responseJSON) {
+                    if (err.responseJSON.link) {
+                        doJump(err.responseJSON.link);
+                    }
+                }
+            },
+            statusCode: {
+                500: function () {
+                    alert("Internal Server ERROR");
+                },
+                404: function () {
+                    alert("Event not found, refresh now");
+                }
+            }
+        });
     }
 
-    // get comment id from server
-    function getCommentId() {
-        commentIdCount += 1;
-        return commentIdCount;
+    function getNewCommentsRefresh() {
+        setTimeout(getNewCommentsRefresh, commentRefreshTime);
+        getNewComments();
     }
 
-    // get date from the server
-    function getDate() {
-        return new Date();
+    function isJoined() {
+        $.ajax({
+            method:'GET',
+            url: `/isJoined/${event.id}`,
+            success: function(res) {
+                console.log(res)
+                if (res.isOwner) {
+                    joinButton.innerText = `${res.numJoined} Joined`;
+                    return;
+                }
+                if (res.isJoined) {
+                    joinButton.innerText = "Joined";
+                }
+                else {
+                    joinButton.innerText = "I Want to Join";
+                }
+                joinButton.addEventListener('click', joinButtonClick);
+            },
+            error: function(err) {
+                if (err.responseJSON) {
+                    if (err.responseJSON.link) {
+                        doJump(err.responseJSON.link);
+                    }
+                }
+                joinButton.innerText = "ERROR";
+            }
+        });
     }
 
     // add comment to the server
-    function addCommentToServer() {}
+    function addCommentToServer(text) {
+        $.ajax({
+            method:'POST',
+            data: {eventId: event.id, text: text},
+            url: '/comment',
+            dataType: 'json',
+            success: function(res) {
+                res.date = new Date(res.date);
+                newDate = res.date;
+                insertNewCommentBlock(res);
+                comments.push(res);
+                inputComment.value = null;
+            },
+            error: function(err) {
+                if (err.responseJSON) {
+                    if (err.responseJSON.link) {
+                        doJump(err.responseJSON.link);
+                    }
+                    if (err.responseJSON.errMsg){
+                        commentInputWarning.innerText = err.responseJSON.errMsg;
+                    }
+                }
+            },
+            statusCode: {
+                500: function () {
+                    alert("Internal Server ERROR");
+                },
+                401: function () {
+                    openLogInPopup("Please login to continue.").then(() => {
+                        addCommentToServer(text);
+                        exitRefresh = true;
+                    }).catch(()=>{});
+                }
+            } 
+        });
+    }
 
-    // delete comment to the server
-    function deleteComment() {};
+    // add reply to server
+    function addReplyToServer(text, commentBlock) {
+        $.ajax({
+            method:'POST',
+            data: {eventId: event.id, commentId: commentBlock.id, text: text, user: "user"},
+            url: '/reply',
+            dataType: 'json',
+            success: function(res) {
+                res.date = new Date(res.date);
+                insertNewSubCommentBlock(res, commentBlock);
+                replyInput.value = null;
+            },
+            error: function(err) {
+                if (err.responseJSON) {
+                    if (err.responseJSON.link) {
+                        doJump(err.responseJSON.link);
+                    }
+                    if (err.responseJSON.errMsg){
+                        replyInput.classList.add("redInput");
+                        replyInput.placeholder = err.responseJSON.errMsg;
+                        replyInput.value = null;
+                    }
+                }
+            },
+            statusCode: {
+                500: function () {
+                    alert("Internal Server ERROR");
+                },
+                401: function () {
+                    openLogInPopup("Please login to continue.").then(() => {
+                        exitRefresh = true;
+                        addReplyToServer(text, commentBlock);
+                    }).catch(()=>{});
+                }
+            }
+        });
+    }
+
+    // delete comment to the server (recoverable)
+    function deleteComment(commentBlock, deleteTag) {
+        $.ajax({
+            method:'PATCH',
+            data: {eventId: event.id, commentId: commentBlock.id},
+            url: '/comment/delete',
+            dataType: 'json',
+            success: function(res) {
+                // delete it from current page
+                commentBlock.querySelector('p').innerText = res.newText;
+                deleteTag.innerText = "Recover";
+                deleteTag.removeEventListener("click", userDeleteClick);
+                deleteTag.addEventListener("click", userRecoverClick);
+            },
+            error: function(err) {
+            },
+            statusCode: {
+                500: function () {
+                    alert("Internal Server ERROR");
+                },
+                404: function() {
+                    alert("Comment deleted.\nPlease refresh the page.");
+                }
+            }
+        });
+    };
+
+    function deleteReply(commentBlock, deleteTag) {
+        $.ajax({
+            method:'PATCH',
+            data: {eventId: event.id, commentId: commentBlock.parentElement.id, replyId: commentBlock.id},
+            url: '/reply/delete',
+            dataType: 'json',
+            success: function(res) {
+                // delete it from current page
+                commentBlock.querySelector('p').innerText = res.newText;
+                deleteTag.innerText = "Recover";
+                deleteTag.removeEventListener("click", userDeleteClick);
+                deleteTag.addEventListener("click", userRecoverClick);
+            },
+            error: function(err) {
+            },
+            statusCode: {
+                500: function () {
+                    alert("Internal Server ERROR");
+                },
+                404: function() {
+                    alert("Reply deleted.\nPlease refresh the page.");
+                }
+            }
+        });
+    }
+
+    function recoverComment(commentBlock, recoverTag) {
+        $.ajax({
+            method:'PATCH',
+            data: {eventId: event.id, commentId: commentBlock.id},
+            url: '/comment/recover',
+            dataType: 'json',
+            success: function(res) {
+                // delete it from current page
+                commentBlock.querySelector('p').innerText = res.newText;
+                recoverTag.innerText = "Delete";
+                recoverTag.removeEventListener("click", userRecoverClick);
+                recoverTag.addEventListener("click", userDeleteClick);
+            },
+            error: function(err) {
+            },
+            statusCode: {
+                500: function () {
+                    alert("Internal Server ERROR");
+                },
+                404: function() {
+                    alert("Comment recovered.\nPlease refresh the page.");
+                }
+            }
+        });
+    }
+
+    function recoverReply(commentBlock, recoverTag) {
+        $.ajax({
+            method:'PATCH',
+            data: {eventId: event.id, commentId: commentBlock.parentElement.id, replyId: commentBlock.id},
+            url: '/reply/recover',
+            dataType: 'json',
+            success: function(res) {
+                // delete it from current page
+                commentBlock.querySelector('p').innerText = res.newText;
+                recoverTag.innerText = "Delete";
+                recoverTag.removeEventListener("click", userRecoverClick);
+                recoverTag.addEventListener("click", userDeleteClick);
+            },
+            error: function(err) {
+            },
+            statusCode: {
+                500: function () {
+                    alert("Internal Server ERROR");
+                },
+                404: function() {
+                    alert("Reply recovered.\nPlease refresh the page.");
+                }
+            }
+        });
+    }
+
+    function removeComment(commentBlock) {
+        $.ajax({
+            method:'DELETE',
+            data: {eventId: event.id, commentId: commentBlock.id},
+            url: '/comment/remove',
+            dataType: 'json',
+            success: function(res) {
+                commentBlock.parentElement.removeChild(commentBlock);
+                // remove this comment from global comment array
+                removeCommentsById(res._id);
+            },
+            error: function(err) {
+                if (err.responseJSON) {
+                    if (err.responseJSON.errMsg == "Comment not found..") {
+                        commentBlock.parentElement.removeChild(commentBlock);
+                        // remove this comment from global comment array
+                        removeCommentsById(commentBlock.id);
+                    }
+                }
+            },
+            statusCode: {
+                404: function() {
+                    alert("Comment not found..");
+                },
+                500: function () {
+                    alert("Internal Server ERROR");
+                }
+            }
+        });
+    }
+
+    function removeReply(commentBlock) {
+        $.ajax({
+            method:'DELETE',
+            data: {eventId: event.id, commentId: commentBlock.parentElement.id, replyId: commentBlock.id},
+            url: '/reply/remove',
+            dataType: 'json',
+            success: function(res) {
+                commentBlock.parentElement.removeChild(commentBlock);
+            },
+            error: function(err) {
+            },
+            statusCode: {
+                500: function () {
+                    alert("Internal Server ERROR");
+                },
+                404: function() {
+                    alert("Reply deleted.\nPlease refresh the page.");
+                }
+            }
+        });
+    }
+
+    function joinEvent() {
+        $.ajax({
+            method:'PATCH',
+            data: {event_id: event.id},
+            url: '/users/follows/event',
+            dataType: 'json',
+            success: function(res) {
+                joinButton.innerText = 'Joined';
+                console.log(res);
+            },
+            error: function(err) {
+                if (err.responseJSON) {
+                    if (err.responseJSON.link) {
+                        doJump(err.responseJSON.link);
+                    }
+                }
+            },
+            statusCode: {
+                500: function () {
+                    alert("Internal Server ERROR");
+                },
+                401: function () {
+                    openLogInPopup("Join event? Please login to continue.").then(() => {
+                        exitRefresh = true;
+                        isJoined();
+                    }).catch(()=>{});
+                },
+                404: function () {
+                    alert("Not a Valid Event");
+                }
+            }
+        });
+    }
+
+    function unJoinEvent() {
+        $.ajax({
+            method:'PATCH',
+            data: {event_id: event.id},
+            url: '/users/unfollows/event',
+            dataType: 'json',
+            success: function(res) {
+                joinButton.innerText = 'I Want to Join';
+            },
+            error: function(err) {
+                if (err.responseJSON) {
+                    if (err.responseJSON.link) {
+                        doJump(err.responseJSON.link);
+                    }
+                }
+            },
+            statusCode: {
+                500: function () {
+                    alert("Internal Server ERROR");
+                },
+                401: function () {
+                    openLogInPopup("Session expired. Please login to continue.").then(() => {
+                        exitRefresh = true;
+                        unJoinEvent();
+                    }).catch(()=>{});
+                }
+            }
+        });
+    }
+
+    function getGoogleMap() {
+        googleMap.src = `https://www.google.com/maps/embed/v1/place?key=AIzaSyAoTRQ4XHxOlEQVJO-3yMI_15G0lBZWH0U&q=${event.address}&zoom=17`
+    }
+
+    function doJump(link) {
+        setTimeout(() => {
+            window.location.href = link;
+        }, 5000);
+    }
 
     /*----------------------------------------------------------------------*/
     /*-- DOM manipulation to make the pop-up --*/
     /*----------------------------------------------------------------------*/
 
     /*- Some selectors needed -*/
-    const replyTags = this.popUp.querySelectorAll('.reply');
-    const deleteTags = this.popUp.querySelectorAll('.deleteComment');
-    const moreBars = this.popUp.querySelectorAll('.moreBar');
+    // const replyTags = this.popUp.querySelectorAll('.reply');
+    // const deleteTags = this.popUp.querySelectorAll('.deleteComment');
+    // const moreBars = this.popUp.querySelectorAll('.moreBar');
     const leftArrow = this.popUp.querySelector('#leftArrow');
     const rightArrow = this.popUp.querySelector('#rightArrow');
-    const commentArea = this.popUp.querySelector('#commentArea');
     const closeButton = this.popUp.querySelector('#close');
-    const joinButton = this.popUp.querySelector('#joinButton');
 
     // More selectors
     const commentSubmit = this.popUp.querySelector('#commentSubmit');
@@ -98,6 +499,7 @@ function EventPopUp(event, user, adminMode) {
 
     /*- create reply form here to use -*/
     const replyForm = document.createElement('form');
+    replyForm.classList.add("fade");
     const replyInput = document.createElement('input');
     replyInput.type = 'text';
     replyInput.placeholder = 'Your reply..';
@@ -111,22 +513,11 @@ function EventPopUp(event, user, adminMode) {
     replyForm.appendChild(replyButton);
 
     /*--------Add event listeners to each element below----------*/
-    // all reply tags
-    for (let i = 0 ; i < replyTags.length ; i++) {
-        replyTags[i].addEventListener('click', userReplyClick);
-    }
-
-    // all moreBars
-    for (let i = 0 ; i < moreBars.length ; i++) {
-        moreBars[i].addEventListener('click', moreBarClick);
-    }
 
     leftArrow.addEventListener('click', slideImg);
     rightArrow.addEventListener('click', slideImg);
-    closeButton.addEventListener('click', closePopUp.bind(this));
-    this.popUp.addEventListener('click', closePopUp.bind(this));
-    closeButton.addEventListener('click', closePopUp);
-    joinButton.addEventListener('click', joinButtonClick);
+    closeButton.addEventListener('click', closeClick.bind(this));
+    this.popUp.addEventListener('click', backgroundClick.bind(this));
 
     // do more add
     commentSubmit.addEventListener('click', makeComment);
@@ -152,7 +543,8 @@ function EventPopUp(event, user, adminMode) {
         const p = document.createElement('p');
         p.appendChild(document.createTextNode(monthNames[event.date.getMonth()] + " " + event.date.getDate()));
         p.appendChild(document.createElement('br'));
-        p.appendChild(document.createTextNode(event.location));
+        const location = createNewElement("span", null, "locationText", event.location);
+        p.appendChild(location);
         const left = document.createElement('div');
         const lArrow = document.createElement('div'); // not
         left.id = 'leftArrowHolder';
@@ -197,7 +589,8 @@ function EventPopUp(event, user, adminMode) {
         }    
         const darkSheet = createNewElement('div', 'darkSheet', null, null);
         const headerInfo = createNewElement('div', null, 'headerInfo', null);
-        const anchor = createNewElement('a', null, 'eventOwner', "by " + event.username);
+        const anchor = createNewElement('a', null, 'eventOwner', "by " + event.creator);
+        anchor.href = `/profile/${event.creatorId}`;
         headerInfo.appendChild(h1);
         headerInfo.appendChild(anchor);
         headerInfo.appendChild(p);
@@ -212,17 +605,21 @@ function EventPopUp(event, user, adminMode) {
         const joinButton = document.createElement('div');
         joinButton.id = 'joinButton';
         // need to check if user has already joined
-        if (!isJoined) {
-            joinButton.appendChild(document.createTextNode("I want to join"));
-        }
-        else {
-            joinButton.appendChild(document.createTextNode("Joined"));
-        }
+        joinButton.appendChild(document.createTextNode("Loading"));
+
         const des = createNewElement('div', null, 'description', null);
         const h3 = createNewElement('h3', null, null, "Description"); // not
-        const bp = createNewElement('p', null, null, event.description); // not
         des.appendChild(h3);
-        des.appendChild(bp);
+        const newD = event.description.split('\n');
+        for (let i = 0 ; i < newD.length ; i++) {
+            let bp = createNewElement('p', null, null, newD[i]); // not
+            des.appendChild(bp);
+        }
+        
+        
+        //map
+        const map = createNewElement('iframe', null, 'googleMap', null);
+    
         const cBar = createNewElement('div', null, 'commentBar', null);
         const cForm = createNewElement('form', null, 'commentForm') // not
         const inputC = createNewElement('textarea', null, 'inputComment', null); // not
@@ -233,23 +630,17 @@ function EventPopUp(event, user, adminMode) {
         cSubmit.type = 'submit';
         cForm.appendChild(inputC);
         cForm.appendChild(cSubmit);
+        cForm.appendChild(commentInputWarning);
         cBar.appendChild(cForm);
         // comment part below
         const commentArea = createNewElement('div', null, 'commentArea', null);
-        event.comment.sort(sortByDate);
-        for (let i = 0 ; i < event.comment.length && i < maxComment ; i++) {
-            const newComment = createCommentBlock(event.comment[i], false);
-            commentArea.appendChild(newComment);
-            commentArea.appendChild(createNewElement('hr', 'cmLine', null, null));
-            event.commentLoaded += 1;
-        }
-        if (event.comment.length > maxComment) {
-            const barContainer = createMoreBar("More Comment");
-            barContainer.id = 'moreComment';
-            commentArea.appendChild(barContainer);
-        }
+
         bottomPart.appendChild(joinButton);
         bottomPart.appendChild(des);
+        if (event.address != null && event.address != "") {
+            bottomPart.appendChild(map);
+        }
+        
         bottomPart.appendChild(cBar);
         bottomPart.appendChild(commentArea);
     
@@ -259,39 +650,65 @@ function EventPopUp(event, user, adminMode) {
         popUp.appendChild(closeX);
         popUp.appendChild(postHolder);
 
+        if (!event.allowComments) {
+            cBar.style = "display: none;"
+        }
         return popUp;
     }
 
+    function createComments(comments) {
+        if (commentArea.lastElementChild == moreComment) {
+            commentArea.removeChild(moreComment);
+        }
+        for (let i = 0 ; i < comments.length; i++) {
+            const newComment = createCommentBlock(comments[i], false);
+            commentArea.appendChild(newComment);
+        }
+        if (!end) {
+            commentArea.appendChild(moreComment);
+        }
+    }
+
     // helper to create a comment block with subcomments inside
-    function createCommentBlock(comment, isSubcomment) {
-        const profilePic = getProfilePicture(comment.username);
+    function createCommentBlock(comment, isSubcomment) {        
         const dateString = getTimeString(comment.date);
 
-        const commentBlock = createNewElement('div', 'commentBlock', `${comment.id}`, null);
-        const pImg = createNewElement('img', 'profilePic', null, null);
-        pImg.src = profilePic;
-        // THIS EVENT LISTENER IS HERE ONLY FOR PURPOSE OF PHASE 1. For phase 2 this will be
-        // connecting with database to switch user
-        pImg.addEventListener("click", function (e) {
-            window.location.href = "profileTP.html";
-        })
-        const name = createNewElement('span', 'userName', null, comment.username);
+        const commentBlock = createNewElement('div', 'commentBlock', `${comment._id}`, null);
+        
+        const name = createNewElement('span', 'userName', null, comment.user.username);
         const userTag = createNewElement('div', 'userTag', null, null);
-        if (adminMode) {
-            const del = createNewElement('span', 'deleteComment', null, 'Delete');
+        if (adminMode == 2) {
+            const rem = createNewElement('span', 'adminTag', null, 'Delete Permanently');
+            userTag.appendChild(rem);
+            rem.addEventListener('click', userRemoveClick);
+        }
+        if (adminMode && !comment.isDeleted) {
+            const del = createNewElement('span', 'adminTag', null, 'Delete');
             userTag.appendChild(del);
             del.addEventListener('click', userDeleteClick);
         }
-        if (isSubcomment == false) {
+        if (adminMode && comment.isDeleted) {
+            const rec = createNewElement('span', 'adminTag', null, 'Recover');
+            userTag.appendChild(rec);
+            rec.addEventListener('click', userRecoverClick);
+        }
+        if (isSubcomment == false && event.allowComments) {
             const reply = createNewElement('span', 'reply', null, "Reply"); // not
+            reply.addEventListener('click', userReplyClick)
             userTag.appendChild(reply);
         }
         userTag.appendChild(document.createTextNode(dateString));
         const hr = createNewElement('hr', null, null, null);
-        const pp = createNewElement('p', null, null, comment.txt);
+        const pp = createNewElement('p', null, null, comment.message);
 
         // make a basic block here
         if (isSubcomment == false) {
+            const profilePic = comment.user.profilePic;
+            const pImg = createNewElement('img', 'profilePic', comment.user._id, null);
+            pImg.src = profilePic;
+            pImg.addEventListener("click", function (e) {
+                window.location.href = `/profile/${comment.user._id}`;;
+            })
             commentBlock.appendChild(pImg);
         }
         commentBlock.appendChild(name);
@@ -300,17 +717,18 @@ function EventPopUp(event, user, adminMode) {
         commentBlock.appendChild(pp);
         
         // now for the reply part
-        if (comment.reply.length > 0) {
-            comment.sortReply(sortByDate);
+        if (comment.reply != null && comment.reply.length > 0) {
             for (let i = 0 ; i < comment.reply.length && i < maxReply ; i++) {
                 const newReply = createCommentBlock(comment.reply[i], true);
                 newReply.classList.add('subCommentBlock');
                 commentBlock.appendChild(newReply);
+                // commentBlock.insertBefore(newReply, commentBlock.children[commentBlock.children.length-1]);
                 comment.replyLoaded += 1;
             }
             if (comment.reply.length > maxReply) {
-                const barContainer = createNewElement('div', 'centerWrapper', `${comment.id}`, null);
+                const barContainer = createNewElement('div', 'centerWrapper', `${comment._id}`, null);
                 barContainer.appendChild(createMoreBar("More Reply"));
+                barContainer.addEventListener('click', moreBarClick);
                 commentBlock.appendChild(barContainer);
             }
         }
@@ -329,10 +747,7 @@ function EventPopUp(event, user, adminMode) {
         const commentBlock = createCommentBlock(comment, false);
         const newReply = commentBlock.querySelector('.reply');
         newReply.addEventListener("click", userReplyClick);
-        const moreBar = commentBlock.querySelector('.moreBar');
-        if (moreBar != null) {
-            moreBar.addEventListener('click', moreBarClick);
-        }
+        commentBlock.classList.add("fade");
         commentArea.insertBefore(commentBlock, commentArea.children[0]);
     }
 
@@ -341,6 +756,7 @@ function EventPopUp(event, user, adminMode) {
         const replyBlock = createCommentBlock(comment, true);
         replyBlock.classList.add('subCommentBlock');
         commentBlock.removeChild(replyForm);
+        commentBlock.classList.add("fade");
         commentBlock.insertBefore(replyBlock, commentBlock.children[5]);
     }
 
@@ -355,32 +771,12 @@ function EventPopUp(event, user, adminMode) {
         }
     }
 
-    // helper to create new element
-    function createNewElement(type, clss, id, txt) {
-        const container = document.createElement(type);
-        if ( (typeof clss !== "undefined") && clss != null ){
-            container.className = clss;
-        }
-        if ( (typeof txt !== "undefined") && txt != null ){
-            container.appendChild(document.createTextNode(txt));
-        }
-        if (id != null) {
-            container.id = id;
-        }
-        return container;
-    }
-
     // helper to get the time string
     function getTimeString(date) {
         const dateString = monthNames[date.getMonth()] + " " + date.getDate() + ", " 
                         + date.getHours() + ":" 
                         + (date.getMinutes() < 10 ? "0" + date.getMinutes() : date.getMinutes());
         return dateString;
-    }
-
-    // sort function for comments
-    function sortByDate(a, b) {
-        return b.date - a.date;
     }
 
     /*----------------------------------------------------------------------*/
@@ -390,27 +786,42 @@ function EventPopUp(event, user, adminMode) {
     /*----------------------------------------------------------------------*/
 
     // close the pop-up
-    function closePopUp(e) {
-        e.preventDefault();
-        if (e.target.id == 'close' || e.target.id == 'popUpBackground') {
-            this.popUp.parentElement.removeChild(this.popUp);
+    function backgroundClick(e) {
+        if (e.target.id == 'popUpBackground' && e.target.id != 'close') {
+            closePopUp.bind(this)();
+        }
+    }
+
+    function closeClick(e) {
+            closePopUp.bind(this)();
+    }
+
+    function closePopUp() {
+        console.log("here");
+        this.popUp.parentElement.removeChild(this.popUp);
+        for (let i = 0 ; i < 100 ; i++) {
+            clearTimeout(i);
+        }
+        if (exitRefresh) {
+            window.location.reload(true); 
         }
     }
 
     // for join button click
     function joinButtonClick(e) {
-        if (e.target.innerText == 'I want to join') {
-            e.target.innerText = 'Joined';
+        if (e.target.innerText == 'I Want to Join') {
+            joinEvent();
         }
         else {
-            e.target.innerText = 'I want to join';
+            unJoinEvent();
         }
     }
 
     // for reply function
     function userReplyClick(e) {
         e.preventDefault();
-
+        replyInput.placeholder = "Your reply..";
+        replyInput.classList.remove("redInput");
         if (replyForm.parentElement != null) {
             replyForm.parentElement.removeChild(replyForm);
         }
@@ -423,11 +834,39 @@ function EventPopUp(event, user, adminMode) {
 
         const commentBlock =  e.target.parentElement.parentElement;        
         // send server request to delete
-        deleteComment();
+        if (commentBlock.classList.contains("subCommentBlock")) {
+            deleteReply(commentBlock, e.target);
+        }
+        else {
+            deleteComment(commentBlock, e.target);
+        }
+    }
 
-        // delete it from current page
-        commentBlock.querySelector('p').innerText = "This comment has been deleted..."
-        e.target.parentElement.removeChild(e.target);
+    // for delete function
+    function userRecoverClick(e) {
+        e.preventDefault();
+
+        const commentBlock =  e.target.parentElement.parentElement;        
+        // send server request to recover
+        if (commentBlock.classList.contains("subCommentBlock")) {
+            recoverReply(commentBlock, e.target);
+        }
+        else {
+            recoverComment(commentBlock, e.target);
+        }
+    }
+
+    function userRemoveClick(e) {
+        e.preventDefault();
+
+        const commentBlock =  e.target.parentElement.parentElement;        
+        // send server request to remove
+        if (commentBlock.classList.contains("subCommentBlock")) {
+            removeReply(commentBlock);
+        }
+        else {
+            removeComment(commentBlock);
+        }
     }
 
     // for img slider
@@ -466,9 +905,18 @@ function EventPopUp(event, user, adminMode) {
 
     // helper to get the correct comment by id 
     function getCommentById(id) {
-        for (let i = 0 ; i < event.comment.length ; i++) {
-            if (id == event.comment[i].id) {
-                return event.comment[i];
+        for (let i = 0 ; i < comments.length ; i++) {
+            if (id == comments[i]._id) {
+                return comments[i];
+            }
+        }
+    }
+
+    function removeCommentsById(id) {
+        for (let i = 0 ; i < comments.length ; i++) {
+            if (id == comments[i]._id) {
+                comments.splice(i, 1);
+                console.log("why not here");
             }
         }
     }
@@ -481,16 +929,10 @@ function EventPopUp(event, user, adminMode) {
         e.preventDefault();
 
         const text = inputComment.value;
-        inputComment.value = null;
         // the line below could be changed when doing server part
         if (text.trim() != "") {
-            const newComment = new Comment(getCommentId(), currentUser.usrName, text, getDate());
             // add new comment to the database
-            addCommentToServer();
-            event.addComment(newComment);
-            event.sortComment(sortByDate);
-            // modify dom
-            insertNewCommentBlock(newComment);
+            addCommentToServer(text);
         }
     }
 
@@ -498,17 +940,10 @@ function EventPopUp(event, user, adminMode) {
     function makeReply(e) {
         e.preventDefault();
         const text = replyInput.value;
-        replyInput.value = null;
         if (text.trim() != "") {
             const commentBlock = e.target.parentElement.parentElement;
             // add new reply to the datebase
-            addCommentToServer();
-            const originalComment = getCommentById(e.target.parentElement.parentElement.id);
-            const newComment = new Comment(getCommentId(), currentUser.usrName, text, getDate());
-            originalComment.addReply(newComment);
-            originalComment.sortReply(sortByDate);
-            // change dom
-            insertNewSubCommentBlock(newComment, commentBlock);
+            addReplyToServer(text, commentBlock);
         }
     }
 
@@ -517,28 +952,7 @@ function EventPopUp(event, user, adminMode) {
     function moreBarClick(e) {
         e.preventDefault();
         if (e.target.id == 'moreComment') {
-            const counter = event.commentLoaded + loadNumber;
-            commentArea.removeChild(e.target);
-            // add event listener to each reply tag and more reply as well
-            for (let i = event.commentLoaded ; i < event.comment.length && i < counter ; i++) {
-                const newBlock = createCommentBlock(event.comment[i], false);
-                const newReply = newBlock.querySelector('.reply');
-                newReply.addEventListener("click", userReplyClick);
-                const moreBar = newBlock.querySelector('.moreBar');
-                if (moreBar != null) {
-                    moreBar.addEventListener('click', moreBarClick);
-                }
-                const newDelete = newBlock.querySelector('.deleteComment');
-                if (newDelete) {
-                    newDelete.addEventListener('click', userDeleteClick);
-                }
-                commentArea.appendChild(newBlock);
-                commentArea.appendChild(createNewElement('hr', 'cmLine', null, null));
-                event.commentLoaded += 1;
-            }
-            if (event.commentLoaded < event.comment.length) {
-                commentArea.appendChild(e.target);
-            }
+            getComments(event);
         }
         // more reply clicked
         else {

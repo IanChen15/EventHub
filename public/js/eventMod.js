@@ -6,13 +6,14 @@
 * To make the pop up. If event is null, make a pop up with
 * empty fields. Both callbacks accept event objects
 */
-function ModPopUp(event, user, domCallBack, serverCallBack) {
-
+function ModPopUp(event, domCallBack, serverCallBack) {
+    console.log(event);
     const optionList = [];
     const maxTitle = 40;
-    getOptionList();
 
     this.popUp = makePopUp(event);
+
+    getOptionList();
 
     /*----------------------------------------------------------------------*/
     /*------------------------- DOM Manipulation ---------------------------*/
@@ -20,12 +21,152 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
 
     const submitButton = this.popUp.querySelector('#eventSubmit');
     const cancelButton = this.popUp.querySelector('#eventCancel');
+    const mapButton = this.popUp.querySelector('#mapPickButton');
+    const locationInput = this.popUp.querySelector('#locationInput');
+    const addressInput = this.popUp.querySelector('#addressInput');
+    const opSelect = this.popUp.querySelector("#categoryInput")
+    // used to get mapPopUp
+    let mapPopUp = null;
 
-    cancelButton.addEventListener('click', closePopUp.bind(this));
+    this.popUp.addEventListener('click', closePopUp.bind(this));
+    cancelButton.addEventListener('click', closePopUpCancel.bind(this));
     submitButton.addEventListener('click', createNewEvent.bind(this));
+    mapButton.addEventListener('click', mapButtonClick.bind(this));
 
+    // Server call here to get the category
     function getOptionList() {
-        optionList.push('cs', 'math', 'group study', 'party', 'other');
+        $.ajax({
+            method:'GET',
+            url: `/categories`,
+            success: function(res) {
+                for (let i = 0 ; i < res.length ; i++) {
+                    optionList.push(res.type);
+                    let op = createNewElement('option', null, null, res[i].type);
+                    opSelect.appendChild(op);
+                    if (event != null) {
+                        for (let i = 0 ; i < event.type.length ; i++) {
+                            for (let j = 0 ; j < opSelect.options.length ; j++) {
+                                if (opSelect.options[j].value == event.type[i]) {
+                                    opSelect.options[j].selected = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            error: function(err) {
+            },
+            statusCode: {
+                500: function () {
+                    alert("Internal Server ERROR");
+                }
+            }
+        });
+    }
+
+    function mapButtonClick() {
+        if (mapPopUp == null) {
+            makeGoogleMapPopUp.bind(this)();
+        }
+        else {
+            this.popUp.appendChild(mapPopUp);
+        }
+    }
+
+    function makeGoogleMapPopUp() {
+        // used to store user return text
+        let searchText = "";
+        let address = null;
+
+        const holder = createNewElement('div', null, 'mapPopUp', null);
+        const indiv = createNewElement('div', null, 'mapHolder', null);
+        const map = createNewElement('iframe', null, 'modMap', null);
+        
+        const myTool = createNewElement('div', null, "modMapToolContainer", null);
+        const setButton = createNewElement('img', 'mapSetButton', 'mapSet', "Set");
+        setButton.src = "/pictures/webPic/mapCheck.png";
+        const cancelButton = createNewElement('img', 'mapSetButton', 'mapCancel', "Cancel");
+        cancelButton.src = "/pictures/webPic/mapCross.png"
+        setButton.addEventListener("mouseover", changeHoverPic);
+        setButton.addEventListener("mouseout", changeUnhoverPic);
+        cancelButton.addEventListener("mouseover", changeHoverPic);
+        cancelButton.addEventListener("mouseout", changeUnhoverPic);
+
+        myTool.append(cancelButton, setButton);
+
+        const input = createNewElement('input', null, 'mapInputField', null);
+        input.type = 'text';
+        input.placeholder = 'Please your place location..';
+
+        indiv.appendChild(map);
+        indiv.append(myTool, input);
+        
+        holder.appendChild(indiv);
+        getGoogleMapForMod(map, input);
+
+        this.popUp.appendChild(holder);
+        mapPopUp = holder;
+
+        // set event listeners
+        cancelButton.addEventListener('click', mapClose.bind(this));
+        setButton.addEventListener('click', mapSet.bind(this));
+
+        function getGoogleMapForMod(googleMap, inputBox) {
+            googleMap.src = "https://www.google.com/maps/embed/v1/view?zoom=17&center=43.6628917,-79.39565640000001&key=AIzaSyAoTRQ4XHxOlEQVJO-3yMI_15G0lBZWH0U";
+            const eventLoc = new google.maps.LatLng(43.6628917, -79.39565640000001); // uoft
+            const bounds = new google.maps.LatLngBounds(eventLoc);
+
+            const autoComplete = new google.maps.places.Autocomplete(inputBox, {
+                bounds: bounds
+            });
+            autoComplete.setFields(
+                ['formatted_address', 'geometry', 'name']);
+
+            autoComplete.addListener('place_changed', onPlaceChanged);
+
+            function onPlaceChanged() {
+                const place = autoComplete.getPlace();
+                if (place.geometry) {
+                    googleMap.src = `https://www.google.com/maps/embed/v1/place?zoom=17&q=${place.formatted_address}&key=AIzaSyAoTRQ4XHxOlEQVJO-3yMI_15G0lBZWH0U`;
+                    address = place.formatted_address;
+                    searchText = place.name;
+                }
+                else {
+                    inputBox.placeholder = 'Please a location..';
+                }
+            }
+        }
+
+        function mapClose(e) {
+            coordinates = null;
+            this.popUp.removeChild(mapPopUp);
+        }
+
+        function mapSet() {
+            locationInput.value = searchText;
+            if (address != null) {
+                addressInput.value = address;
+            }
+            this.popUp.removeChild(mapPopUp);
+        }
+
+        function changeHoverPic(e) {
+            if (e.target.id == 'mapSet') {
+                e.target.src = "/pictures/webPic/mapCheckDark.png";
+            }
+            else {
+                e.target.src = "/pictures/webPic/mapCrossDark.png";
+            }   
+        }
+
+        function changeUnhoverPic(e) {
+            if (e.target.id == 'mapSet') {
+                e.target.src = "/pictures/webPic/mapCheck.png";
+            }
+            else {
+                e.target.src = "/pictures/webPic/mapCross.png";
+            }   
+        }
     }
 
     function makePopUp(event) {
@@ -34,7 +175,7 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
         const form = createNewElement('form', null, 'postInfoForm', null);
         form.action = "/event";
         form.enctype = "multipart/form-data"
-        form.method = "post"; //////////////////////////////////////////////////////////////////////////////////////////////////////////////// SERVER PART!!! SHOULD CHANGE
+        form.method = "post";  
         // for basic info
         const basicInfo = createNewElement('div', 'block', 'basicInfo', null);
         const basicHeader = createNewElement('div', 'blockHeader', null, 'Basic Info');
@@ -48,10 +189,6 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
         const opSelect = createNewElement('select', 'inputBox', 'categoryInput', null);
         opSelect.name = "types";
         opSelect.multiple = true;
-        for (let i = 0 ; i < optionList.length ; i++) {
-            let op = createNewElement('option', null, null, optionList[i].charAt(0).toUpperCase() + optionList[i].slice(1));
-            opSelect.appendChild(op);
-        }
         opLi.appendChild(opLabel);
         opLi.appendChild(opSelect);
         // for title input
@@ -71,6 +208,13 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
         const dateInput = createNewElement('input', 'inputBox', 'dateInput', null);
         dateInput.type = 'datetime-local';
         dateInput.name = "date";
+        const curDate = new Date();
+        dateInput.min = `${curDate.getFullYear()}` + "-" 
+        + (curDate.getMonth() + 1 < 10 ? "0" + (curDate.getMonth() + 1) : (curDate.getMonth() + 1)) + "-"
+        + (curDate.getDate() < 10 ? "0" + curDate.getDate() : curDate.getDate()) + 'T'
+        + (curDate.getHours() < 10 ? "0" + curDate.getHours() : curDate.getHours()) + ":"
+        + (curDate.getMinutes() < 10 ? "0" + curDate.getMinutes() : curDate.getMinutes());
+
         dateLi.appendChild(dateLabel);
         dateLi.appendChild(dateInput);
         // for location
@@ -78,10 +222,12 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
         const locationLabel = createNewElement('label', null, null, 'Location:');
         locationLabel.htmlFor = 'locationInput';
         const locationInput = createNewElement('input', 'inputBox', 'locationInput', null);
+        const mapPick = createNewElement('div', null, 'mapPickButton', 'Pick on Google Map');
         locationInput.type = 'text';
         locationInput.name = 'location';
         locationLi.appendChild(locationLabel);
         locationLi.appendChild(locationInput);
+        locationLi.appendChild(mapPick);
         // combine basic ul
         basicList.appendChild(opLi);
         basicList.appendChild(titleLi);
@@ -122,6 +268,9 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
         const allowInput = createNewElement('input', null, 'allowComments', 'Comment');
         allowInput.type = 'checkbox';
         allowInput.name = 'allowComments'
+        if (event) {
+            allowInput.checked = event.allowComments;
+        }
         allowLi.appendChild(allowLabel);
         allowLi.appendChild(allowInput);
         // combine main ul
@@ -131,6 +280,12 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
         // put main to form
         mainInfo.appendChild(mainHeader);
         mainInfo.appendChild(mainList);
+        // for hidden coor
+        const address = createNewElement('input', null, 'addressInput', null);
+        address.type = "hidden";
+        address.name = "address";
+
+        form.append(address);
         form.appendChild(mainInfo);
 
         // make two buttons
@@ -147,9 +302,7 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
         // finish up
         innerHolder.appendChild(form);
         holder.appendChild(innerHolder);
-
         if (event != null) {
-            opSelect.selectedIndex = optionList.indexOf(event.type);
             titleInput.value = event.title;
             locationInput.value = event.location;
             const date1 = event.date;
@@ -164,8 +317,16 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
             // for img
             for (let i = 0 ; i < event.img.length ; i++) {
                 const img = newImgInput();
+                img.querySelector(".imgSrc").value = event.img[i];
                 img.firstChild.style.backgroundImage = "url(" + event.img[i] + ")";
+                const closeImgButton = createNewElement("img", "imgInputCloseButton")
+                closeImgButton.src = "/pictures/webPic/close.png";
+                img.firstChild.appendChild(closeImgButton)
+                closeImgButton.addEventListener("click", e => {
+                    e.target.parentElement.parentElement.remove();
+                })
                 imgUl.appendChild(img);
+
             }
 
             submitButton.value = "Save";
@@ -177,31 +338,21 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
 
     // Create the new Img Input for uploading photos.
     function newImgInput() {
+        const li = createNewElement("li");
         const imgButton = createNewElement("div", "imgInputButton");
         const imgInput = createNewElement("input", "imgInput");
         imgInput.type = "file";
         imgInput.name = "eventPhotos"
         imgInput.accept = "image/*";
+        const imgSrc = createNewElement("input", "imgSrc");
+        imgSrc.type = "hidden";
+        imgSrc.name = "imgSrc"
         imgInput.addEventListener("change", updateEventPhoto);
         imgButton.appendChild(imgInput);
-        const li = createNewElement("li");
+        imgButton.appendChild(imgSrc);
         li.appendChild(imgButton);
+        
         return li;
-    }
-
-    // helper to create new element
-    function createNewElement(type, clss, id, txt) {
-        const container = document.createElement(type);
-        if ( (typeof clss !== "undefined") && clss != null ){
-            container.className = clss;
-        }
-        if ( (typeof txt !== "undefined") && txt != null ){
-            container.appendChild(document.createTextNode(txt));
-        }
-        if (id != null) {
-            container.id = id;
-        }
-        return container;
     }
 
     /*----------------------------------------------------------------------*/
@@ -212,12 +363,19 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
     function updateEventPhoto(e) {
         let filepath = e.target.files[0];
         if (filepath != null){
-            filepath = filepath.name;
+            e.target.parentElement.querySelector(".imgSrc").value = "new";
+            changeColorNormal(e.target.parentElement);
             let oldImg = e.target.parentElement.style.backgroundImage;
-            console.log(oldImg);
-            e.target.parentElement.style.backgroundImage = "url(../pictures/eventPic/" + filepath + ")";
-            if (oldImg == "")
+            e.target.parentElement.style.backgroundImage=`url(${URL.createObjectURL(filepath)})`;
+            if (oldImg == "") {
+                const closeImgButton = createNewElement("img", "imgInputCloseButton")
+                closeImgButton.src = "/pictures/webPic/close.png";
+                closeImgButton.addEventListener("click", e => {
+                    e.target.parentElement.parentElement.remove();
+                })
+                e.target.parentElement.appendChild(closeImgButton);
                 document.querySelector("#imageList").appendChild(newImgInput());
+            }
         }
     }
 
@@ -233,29 +391,65 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
             const loc = this.popUp.querySelector('#locationInput');
             const description = this.popUp.querySelector('#descriptionInput');
             const descriptionInput = document.querySelector('.descriptionInput');
-            descriptionInput.value = description.value
+            descriptionInput.value = description.value;
   
             if(selectCat.selectedOptions.length != 0  && title.value != "" && loc.value != "" && description.value != "") {
                 // do work here
-                const categ = [];
-                for(let i = 0; i < selectCat.selectedOptions.len; i++){
-                    categ.push(selectCat.selectedOptions[i].value);
-                }
-                const imgList = [];
-                const len = imgContainer.querySelectorAll(".imgInputButton").length;
-                for (let i = 0; i < len - 1; i++) {
-                    imgList.push(imgContainer.querySelectorAll(".imgInputButton")[i].style.backgroundImage.slice(4, -1).replace(/"/g, "")); // == "url("src.png")
-                }
-                const newEvent = new Event(title.value, loc.value, convertTime(date.value), description.value, imgList, categ, user.usrName);
-                // do callback and remove itself
-                if (domCallBack != null) {
-                    domCallBack(newEvent);
-                }
+                changeColorNormal(selectCat)
+                changeColorNormal(title);
+                changeColorNormal(loc);
+                changeColorNormal(date);
+                changeColorNormal(description);
                 if (serverCallBack != null) {
-                    serverCallBack(newEvent);
+                    serverCallBack($("#postInfoForm")).then( event => {
+                        console.log("Success");
+                        this.popUp.parentElement.removeChild(this.popUp);
+                        if (domCallBack != null){
+                            domCallBack(event);
+                        }
+                    }).catch(err => {
+                        // status code will be err.status!!!!!!!!
+                        switch (err.status){
+                            case 400: 
+                                let location = err.responseJSON.location;
+                                if (location == "types") {
+                                    loc.style.borderColor = "red";
+                                    alert("Invalid Event Categories Choosen!")
+                                } else { // Date
+                                    date.style.borderColor = "red";
+                                    alert("Invalid Date!");
+                                }
+                                break;
+                            case 401: // NOT LOGGED IN!!!
+                                openLogInPopup("Sessions expired! Please log in again").then(function() {
+                                    window.location.reload(true);
+                                }).catch(function() {
+                                    window.location.reload(true);
+                                })
+                                break;
+                            case 422: 
+                                let indexes = err.responseJSON.invalid;
+                                console.log(indexes);
+                                if (!indexes)
+                                    break;
+                                indexes.forEach(index => {
+                                    document.querySelectorAll(".imgInputButton")[index].style.borderColor = "red";
+                                })
+                                alert("Invalid file type, please only upload images!")
+                                // let invalidFile = imgContainer.querySelectorAll(".imgInputButton")[err.responseText]
+                                // invalidFile.style.borderColor = "red"
+                                break;
+                            case 500: 
+                                alert("Internal Server Error\n")
+                                break;
+                            default:
+                        }
+                    });
+                    // SPINNING CIRCLE!!!
+                } else {
+                    this.popUp.parentElement.removeChild(this.popUp);
                 }
-                document.querySelector("#postInfoForm").submit();
-                this.popUp.parentElement.removeChild(this.popUp);
+
             }
             else { 
                 changeColorError(selectCat);
@@ -269,8 +463,13 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
 
     // close self
     function closePopUp(e) {
-        e.preventDefault();
-        this.popUp.parentElement.removeChild(this.popUp);
+        if (e.target.id == "makePopUp" && e.target.id != "eventCancel") {
+            this.popUp.parentElement.removeChild(this.popUp);
+        }
+    }
+    function closePopUpCancel(e) {
+         this.popUp.parentElement.removeChild(this.popUp);
+
     }
 
     // Change the border color of empty input to red to indicate error.
@@ -283,17 +482,12 @@ function ModPopUp(event, user, domCallBack, serverCallBack) {
         }
     }
 
-    // Convert the dateime-local
-    function convertTime(date) {
-        const string = date.split(/^(\d{4})\-(\d{2})\-(\d{2})T(\d{2}):(\d{2})$/);	
-        return new Date(string[1], string[2], string[3], string[4], string[5]);
+    // Change the border color of empty input to grey
+    function changeColorNormal(element) {
+        element.style.borderColor = "rgb(180, 176, 176)";
     }
 }
 
 ModPopUp.prototype.getPopUp = function () {
     return this.popUp;
 }
-
-//const user = new User("ian", "../pictures/profilePic/face.jpg", "I need sleep", "2019-03-06", ["cs", "math","other"]);
-//const model12 = new Event("I ran out of Idea4", "Bahen, Center of I.T.", new Date(), "It's really fun", ["../pictures/eventPic/w2.jpg"], "other", user.usrName);
-//new ModPopUp(null, user, null, null);

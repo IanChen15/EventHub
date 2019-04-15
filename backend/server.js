@@ -10,7 +10,7 @@ const { EventHubDB } = require('../db/EventHubDB')
 
 const { Event } = require('../models/event')
 const { User } = require('../models/user')
-const { Interest } = require('../models/interest')
+const { Category } = require('../models/category')
 
 
 // const interest = new Interest({

@@ -11,47 +11,53 @@ const { EventHubDB } = require('../db/EventHubDB')
 const { Event } = require('../models/event')
 const { Comment } = require('../models/event')
 const { User } = require('../models/user')
-const { Interest } = require('../models/interest')
+const { Category } = require('../models/category')
 
 
-const interest = new Interest({
-	interest: "Cs"
+const category = new Category({
+	type: "Cs"
 })
-const interest2 = new Interest({
-	interest: "Math"
+const category2 = new Category({
+	type: "Math"
 })
-const interest3 = new Interest({
-	interest: "Group study"
+const category3 = new Category({
+	type: "Group study"
 })
-const interest4 = new Interest({
-	interest: "Party"
+const category4 = new Category({
+	type: "Party"
 })
-const interest5 = new Interest({
-	interest: "Other"
+const category5 = new Category({
+	type: "Other"
 })
-interest.save()
-interest2.save()
-interest3.save()
-interest4.save()
-interest5.save()
+category.save()
+category2.save()
+category3.save()
+category4.save()
+category5.save()
 const user1 = new User({
     email: "user@admin.admin",
     password: "user",
     username: "user",
     birthday: new Date("2000 Feb 29"),
     description: "I am a boring user",
-    interests: new mongoose.Types.ObjectId(interest._id),
+    interests: new mongoose.Types.ObjectId(category._id),
     followedEvents: [],
     follows: [],
-    followers: [],
     admin: false,
-    profilePic: "../imgFile/face.jpg"
+    profilePic: "/pictures/profilePic/face.jpg"
 });
 
 const comment = new Comment({
     user: new mongoose.Types.ObjectId(user1._id),
     message: "Bill is stupid!!!",
-    date: new Date()
+    date: new Date(),
+    reply: [{
+        user: new mongoose.Types.ObjectId(user1._id),
+		message: "Ian is smart", 
+        date: new Date(),
+        isDeleted: false
+    }],
+    isDeleted: false
 })
 const event1 = new Event({
 	title: "Anime North 2019",
@@ -59,12 +65,12 @@ const event1 = new Event({
 	location: "Toronto Congress Centre / Delta Hotels by Marriott Toronto Airport (formerly the International Plaza) 650 Dixon Road Toronto, Ontario M9W 1J1",
 	date: new Date(),
 	description: "Anime North is Toronto's largest fan-run Japanese Animation convention.",
-	img: ["../w3.png"],
-	eventType: [new mongoose.Types.ObjectId(interest._id)],
+	img: ["/pictures/eventPic/w2.jpg"],
+	eventType: [new mongoose.Types.ObjectId(category._id)],
     comments: [comment],
     followers: [],
     numFollows: 0,
-    allowComments: true
+    allowComments: false
 });
 let d = new Date();
 d.setHours(23, 0, 0, 0);
@@ -74,8 +80,8 @@ const event2 = new Event({
 	location: "Evergreen Brick Works, 550 Bayview Avenue Toronto, ON M4W 3X8",
 	date: d,
 	description: "Toronto foodies, this is the event you’ve waited all year for: On April 29.",
-	img: ["../w3.png"],
-	eventType: [new mongoose.Types.ObjectId(interest._id), new mongoose.Types.ObjectId(interest2._id)],
+	img: ["/pictures/eventPic/w3.jpg"],
+	eventType: [new mongoose.Types.ObjectId(category._id), new mongoose.Types.ObjectId(category2._id)],
     comments: [comment],
     followers: [],
     numFollows: 0,
@@ -88,12 +94,11 @@ const user2 = new User({
     username: "admin",
     birthday: new Date("2000 Feb 29"),
     description: "I am a boring admin",
-    interests: new mongoose.Types.ObjectId(interest._id),
+    interests: new mongoose.Types.ObjectId(category._id),
     followedEvents: [new mongoose.Types.ObjectId(event1._id), new mongoose.Types.ObjectId(event2._id)],
     follows: [],
-    followers: [],
-    admin: false,
-    profilePic: "../imgFile/face.jpg"
+    admin: true,
+    profilePic: "/pictures/profilePic/face.jpg"
 });
 user1.save(function (err, cs) {
 	console.log(err)

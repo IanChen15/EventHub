@@ -41,7 +41,9 @@ h1 {
 	height: 100%;
 	width: 50%;
 }
-
+#errorMsg {	
+	color: red;
+}
 .psw {
 	float:right;
 }
